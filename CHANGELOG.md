@@ -5,7 +5,9 @@
 Adds portable Codex and Claude project skills, merged SessionStart/SubagentStart
 hooks, opt-in strict Stop enforcement, a local user installer, and the `integrate`
 command. Generated bootstrap blocks now stay at the start of vendor instruction
-files so they remain visible under bounded instruction loading.
+files so they remain visible under bounded instruction loading. Repeated Codex and
+Claude integration now removes only AIW-owned command handlers, preserving
+co-installed handlers even when they share an AIW hook group.
 
 ## 0.1.0 — 2026-09-10
 

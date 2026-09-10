@@ -14,7 +14,8 @@ validated AIW workspace.
 
 **State written.** Marked root bootstrap blocks; project skill files under
 `.agents/skills` and `.claude/skills`; merged hook groups in `.codex/hooks.json`
-and `.claude/settings.json`. Existing unrelated settings and hooks are preserved.
+and `.claude/settings.json`. Existing unrelated settings, groups, handlers, and
+group metadata are preserved for both vendors.
 
 **Deterministic work.** SessionStart and SubagentStart run `aiw hook session-start`,
 which emits a bounded recovery packet when the hook working directory belongs to
@@ -33,6 +34,12 @@ adoption and handoff references that load only when relevant.
 **Transitions.** No canonical state changes. Hooks cannot mark work done or invent
 a task.
 
-**Idempotency / failure.** Repeated integration replaces only AIW hook groups and
-generates identical files. Existing hook JSON is parsed before any integration
-file is written. Malformed JSON, markers, or managed symlinks fail closed.
+**Idempotency / failure.** Repeated integration removes only direct `command`
+handlers whose command exactly matches an AIW lifecycle command. Other handlers
+remain in place even when an installer added them to the same group as an AIW
+handler. AIW deletes a whole group only when it exactly matches a group AIW
+generated, then writes one current AIW group. This makes sequential merge-based
+installers safe in either order. It cannot prevent another installer from
+replacing the entire file or coordinate simultaneous writers. Existing hook JSON
+is parsed before any integration file is written. Malformed JSON, hook containers,
+markers, or managed symlinks fail closed.

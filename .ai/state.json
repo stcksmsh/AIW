@@ -369,6 +369,176 @@
         ]
       }
     },
+    "hook-merge-hardening": {
+      "title": "Preserve arbitrary co-installed hook handlers",
+      "plan": "v02",
+      "status": "done",
+      "dependencies": [],
+      "scope": [
+        "src/adapter.rs",
+        "tests/cli.rs",
+        "docs/operations/integrate.md",
+        "docs/agent-integration-guide.md",
+        "docs/dogfood.md",
+        "CHANGELOG.md"
+      ],
+      "acceptance": [
+        "aiw integrate removes or replaces only exact AIW-owned command handlers",
+        "Non-AIW handlers remain unchanged when installed before AIW, after AIW, or beside AIW in the same hook group",
+        "Switching strict and observe modes changes only AIW Stop handlers",
+        "Unrelated hook-group metadata and top-level settings survive repeated integration",
+        "Malformed hook structures fail before integration writes"
+      ],
+      "constraints": [
+        "Do not add runtime knowledge of or dependencies on another project",
+        "Do not claim protection against installers that replace the entire settings file or concurrent uncoordinated writes"
+      ],
+      "verify": [
+        {
+          "argv": [
+            "cargo",
+            "fmt",
+            "--all",
+            "--",
+            "--check"
+          ],
+          "timeout_seconds": 1200
+        },
+        {
+          "argv": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "--all-targets",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "timeout_seconds": 1200
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked"
+          ],
+          "timeout_seconds": 1200
+        },
+        {
+          "argv": [
+            "cargo",
+            "build",
+            "--release",
+            "--locked"
+          ],
+          "timeout_seconds": 1200
+        }
+      ],
+      "worker": "codex",
+      "blocker": null,
+      "result": "Hardened Codex and Claude hook merging to remove only exact AIW command handlers, preserve co-installed handlers and group metadata in either sequential install order, fail before writes on malformed group handlers, and pass 34 CLI integration tests plus the full release contract.",
+      "evidence": {
+        "source_hash": "02ceb17282317895c38be8cee3f2d954ba4bbaca5bb02bab549613d5de1a735b",
+        "contract_hash": "93fcb7e42a7efab8fcbe3093d6fd3806552ed2e6940c75de18f77193631f0406",
+        "success": true,
+        "runs": [
+          {
+            "schema_version": 1,
+            "id": "run-BCa3Qy",
+            "argv": [
+              "cargo",
+              "fmt",
+              "--all",
+              "--",
+              "--check"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 404,
+            "stdout": ".ai/runtime/runs/run-BCa3Qy/stdout.log",
+            "stderr": ".ai/runtime/runs/run-BCa3Qy/stderr.log",
+            "diagnostics": [],
+            "tail": [],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-46REcx",
+            "argv": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "--all-targets",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 1268,
+            "stdout": ".ai/runtime/runs/run-46REcx/stdout.log",
+            "stderr": ".ai/runtime/runs/run-46REcx/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Checking aiw v0.2.0 (/secondary/Programming/Github/AIW)",
+              "Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.07s"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-82rkjq",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 1692,
+            "stdout": ".ai/runtime/runs/run-82rkjq/stdout.log",
+            "stderr": ".ai/runtime/runs/run-82rkjq/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "test recovery_remains_bounded_after_large_history ... ok",
+              "test aggregate_verification_and_long_command_display_stay_bounded ... ok",
+              "test unix::timeout_and_source_mutating_verification_fail ... ok",
+              "test malformed_json_is_diagnosed ... ok",
+              "test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.32s",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.19s",
+              "Running unittests src/main.rs (target/debug/deps/aiw-3497df528764ce9d)",
+              "Running tests/cli.rs (target/debug/deps/cli-ed7a4b5f875b9bf9)"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-56F3j3",
+            "argv": [
+              "cargo",
+              "build",
+              "--release",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 11236,
+            "stdout": ".ai/runtime/runs/run-56F3j3/stdout.log",
+            "stderr": ".ai/runtime/runs/run-56F3j3/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Compiling aiw v0.2.0 (/secondary/Programming/Github/AIW)",
+              "Finished `release` profile [optimized] target(s) in 11.13s"
+            ],
+            "omitted": 0
+          }
+        ]
+      }
+    },
     "release": {
       "title": "Verify and exercise v0.1 release",
       "plan": "v01",
@@ -537,8 +707,8 @@
   "active_plan": "v02",
   "active_task": null,
   "checkpoint": {
-    "task": null,
-    "next_action": "Next milestone: validate authenticated live Claude/Codex handoff on a writable host, then measure structural Rust retrieval. Completed v0.1 verification: aiw show task release.",
-    "note": "All v0.1 tasks are done. Reference CLI, schema, adapters, docs and CI are committed; runtime logs are disposable."
+    "task": "hook-merge-hardening",
+    "next_action": "Run the declared verification contract, inspect the resulting diff, and persist the hardening result",
+    "note": "Handler ownership is now exact and direct; focused coexistence tests pass for both Codex and Claude in both sequential install orders"
   }
 }

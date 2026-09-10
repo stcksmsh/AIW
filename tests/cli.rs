@@ -481,12 +481,127 @@ fn integrate_installs_skills_and_merges_hooks_idempotently() {
     );
 }
 #[test]
+fn integrate_preserves_coinstalled_handlers_for_codex_and_claude() {
+    let r = Repo::new(false);
+    let initial = json!({
+        "custom": {"owner": "third-party"},
+        "hooks": {
+            "SessionStart": [{
+                "matcher": "custom-start",
+                "label": "installed-first",
+                "hooks": [{"type": "command", "command": "third-party before"}]
+            }],
+            "Stop": [{
+                "label": "installed-first",
+                "hooks": [{"type": "command", "command": "third-party stop before"}]
+            }]
+        }
+    });
+    for path in [".codex/hooks.json", ".claude/settings.json"] {
+        r.write(path, &initial.to_string());
+    }
+    r.ok(&["integrate", "all", "--enforcement", "strict"]);
+
+    for path in [".codex/hooks.json", ".claude/settings.json"] {
+        let mut config: Value =
+            serde_json::from_slice(&fs::read(r.path().join(path)).unwrap()).unwrap();
+        for event in ["SessionStart", "Stop"] {
+            let groups = config["hooks"][event].as_array_mut().unwrap();
+            let aiw_group = groups
+                .iter_mut()
+                .find(|group| {
+                    group["hooks"].as_array().is_some_and(|handlers| {
+                        handlers.iter().any(|handler| {
+                            handler["command"]
+                                .as_str()
+                                .is_some_and(|command| command.starts_with("aiw hook "))
+                        })
+                    })
+                })
+                .unwrap();
+            aiw_group["label"] = json!("installed-after");
+            aiw_group["note"] = json!("aiw hook text here is not a handler");
+            aiw_group["hooks"]
+                .as_array_mut()
+                .unwrap()
+                .push(json!({"type": "command", "command": format!("third-party {event} after")}));
+        }
+        r.write(path, &serde_json::to_string_pretty(&config).unwrap());
+    }
+
+    r.ok(&["integrate", "all", "--enforcement", "strict"]);
+    for path in [".codex/hooks.json", ".claude/settings.json"] {
+        let config: Value =
+            serde_json::from_slice(&fs::read(r.path().join(path)).unwrap()).unwrap();
+        assert_eq!(config["custom"]["owner"], "third-party");
+        for event in ["SessionStart", "Stop"] {
+            let groups = config["hooks"][event].as_array().unwrap();
+            let shared = groups
+                .iter()
+                .find(|group| group["label"] == "installed-after")
+                .unwrap();
+            assert_eq!(shared["note"], "aiw hook text here is not a handler");
+            assert_eq!(shared["hooks"].as_array().unwrap().len(), 1);
+            assert_eq!(
+                shared["hooks"][0]["command"],
+                format!("third-party {event} after")
+            );
+            assert!(
+                groups
+                    .iter()
+                    .any(|group| group["label"] == "installed-first")
+            );
+            assert_eq!(
+                groups
+                    .iter()
+                    .flat_map(|group| group["hooks"].as_array().into_iter().flatten())
+                    .filter(|handler| handler["command"]
+                        .as_str()
+                        .is_some_and(|command| command.starts_with("aiw hook ")))
+                    .count(),
+                1
+            );
+        }
+    }
+
+    r.ok(&["integrate", "all", "--enforcement", "observe"]);
+    for path in [".codex/hooks.json", ".claude/settings.json"] {
+        let config: Value =
+            serde_json::from_slice(&fs::read(r.path().join(path)).unwrap()).unwrap();
+        let stop = config["hooks"]["Stop"].as_array().unwrap();
+        assert_eq!(stop.len(), 2);
+        assert!(stop.iter().any(|group| group["label"] == "installed-first"));
+        let shared = stop
+            .iter()
+            .find(|group| group["label"] == "installed-after")
+            .unwrap();
+        assert_eq!(shared["hooks"].as_array().unwrap().len(), 1);
+        assert_eq!(shared["hooks"][0]["command"], "third-party Stop after");
+    }
+}
+#[test]
 fn integrate_validates_hook_configs_before_writing() {
     let r = Repo::new(false);
     r.write(".codex/hooks.json", "[]");
     r.err(&["integrate", "codex"], "must be a JSON object");
     assert!(!r.path().join("AGENTS.md").exists());
     assert!(!r.path().join(".agents/skills/aiw-workspace").exists());
+
+    let r = Repo::new(false);
+    r.write(".codex/hooks.json", r#"{"custom":true}"#);
+    r.write(
+        ".claude/settings.json",
+        r#"{"hooks":{"SessionStart":[{"hooks":"not-an-array"}]}}"#,
+    );
+    r.err(&["integrate", "all"], "group hooks must be an array");
+    assert_eq!(
+        fs::read_to_string(r.path().join(".codex/hooks.json")).unwrap(),
+        r#"{"custom":true}"#
+    );
+    assert!(!r.path().join("AGENTS.md").exists());
+    assert!(!r.path().join("CLAUDE.md").exists());
+    assert!(!r.path().join(".agents/skills/aiw-workspace").exists());
+    assert!(!r.path().join(".claude/skills/aiw-workspace").exists());
 }
 #[test]
 fn lifecycle_hooks_load_context_and_guard_unfinished_work_once() {

@@ -89,8 +89,11 @@ No provider-specific tokenizer is assumed or token count invented.
 
 `cargo fmt --check`, `cargo clippy --locked --all-targets -- -D warnings`,
 `cargo test --locked`, and a release build are the final declared release contract.
-v0.2 adds 3 CLI integration tests (33 total, plus 3 unit tests) covering merged
-hook configuration, install idempotency, startup context, and strict-stop behavior.
+v0.2 adds 4 CLI integration tests (34 total, plus 3 unit tests) covering exact
+handler-level hook merging for Codex and Claude, install idempotency, startup
+context, and strict-stop behavior. The merge regression exercises installers in
+both sequential orders, including a third-party handler and metadata added to an
+AIW group, and the strict-to-observe transition.
 The generated schema is checked against the committed schema and the example is
 parsed by the real CLI. Python jsonschema is not installed locally; no independent
 JSON Schema validator result is claimed. CI repeats Rust checks on Linux, macOS

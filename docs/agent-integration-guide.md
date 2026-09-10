@@ -53,8 +53,13 @@ aiw doctor
 ```
 
 Use `claude` or `codex` instead of `all` to generate only one vendor integration.
-The command preserves unrelated instructions, settings, and hook groups. Repeated
-runs are idempotent.
+For both vendors, the command preserves unrelated instructions, settings, hook
+groups, handlers, and group metadata. A later AIW run removes only direct command
+handlers that exactly match AIW lifecycle commands, including when another
+installer placed a handler beside one in the same group. Repeated runs are
+idempotent. Sequential installers can therefore merge in either order; an
+installer that replaces the whole JSON file or simultaneous uncoordinated writes
+remain outside that guarantee.
 
 Generated project files are:
 

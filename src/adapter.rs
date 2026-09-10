@@ -56,13 +56,15 @@ const ADOPT: &str =
 const LIFECYCLE: &str =
     include_str!("../integrations/aiw-agent/skills/aiw-workspace/references/lifecycle.md");
 
-fn contains_aiw_hook(value: &Value) -> bool {
-    match value {
-        Value::String(value) => value.starts_with("aiw hook "),
-        Value::Array(values) => values.iter().any(contains_aiw_hook),
-        Value::Object(values) => values.values().any(contains_aiw_hook),
-        _ => false,
-    }
+fn is_aiw_hook_handler(value: &Value) -> bool {
+    let Some(handler) = value.as_object() else {
+        return false;
+    };
+    handler.get("type").and_then(Value::as_str) == Some("command")
+        && matches!(
+            handler.get("command").and_then(Value::as_str),
+            Some("aiw hook session-start" | "aiw hook stop --strict")
+        )
 }
 
 fn group(event: &str, strict: bool) -> Value {
@@ -81,6 +83,33 @@ fn group(event: &str, strict: bool) -> Value {
         value["matcher"] = json!("startup|resume|clear|compact");
     }
     value
+}
+
+fn remove_aiw_handlers(groups: &mut Vec<Value>, event: &str, path: &std::path::Path) -> Result<()> {
+    for value in groups.iter() {
+        if let Some(handlers) = value.as_object().and_then(|group| group.get("hooks")) {
+            ensure!(
+                handlers.is_array(),
+                "hooks.{event} group hooks must be an array: {}",
+                path.display()
+            );
+        }
+    }
+
+    let generated = group(event, true);
+    groups.retain_mut(|value| {
+        let was_generated = *value == generated;
+        let Some(handlers) = value
+            .as_object_mut()
+            .and_then(|group| group.get_mut("hooks"))
+            .and_then(Value::as_array_mut)
+        else {
+            return true;
+        };
+        handlers.retain(|handler| !is_aiw_hook_handler(handler));
+        !was_generated || !handlers.is_empty()
+    });
+    Ok(())
 }
 
 fn merged_hooks(path: &std::path::Path, strict: bool) -> Result<Value> {
@@ -104,7 +133,7 @@ fn merged_hooks(path: &std::path::Path, strict: bool) -> Result<Value> {
         let groups = groups
             .as_array_mut()
             .ok_or_else(|| anyhow::anyhow!("hooks.{event} must be an array: {}", path.display()))?;
-        groups.retain(|value| !contains_aiw_hook(value));
+        remove_aiw_handlers(groups, event, path)?;
         if event != "Stop" || strict {
             groups.push(group(event, strict));
         }
