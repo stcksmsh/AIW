@@ -189,7 +189,7 @@
     "release": {
       "title": "Verify and exercise v0.1 release",
       "plan": "v01",
-      "status": "in_progress",
+      "status": "done",
       "dependencies": [
         "harden",
         "docs"
@@ -248,15 +248,114 @@
       ],
       "worker": "codex",
       "blocker": null,
-      "result": null,
-      "evidence": null
+      "result": "cargo fmt, 33 tests (3 unit + 30 integration), Clippy with warnings denied, and release build passed. Installed offline into /tmp/aiw-v01-install and completed a fresh Git repository workflow with Claude-to-Codex process handoff (702-byte packet). Recovery benchmark remained exactly 759 bytes with 1500 historical tasks. Actual provider smoke attempts remain limited by host initialization/network conditions; see docs/dogfood.md.",
+      "evidence": {
+        "source_hash": "f3144c0fb8b3a8a29b7c16dc8636bb1f372128d64552368c4659eb048b1e1c9f",
+        "contract_hash": "2fc0a208c62b4600ecc2f28301e617a840f32901da8bb0b945c0cc72ceea2cfb",
+        "success": true,
+        "runs": [
+          {
+            "schema_version": 1,
+            "id": "run-IwJSQo",
+            "argv": [
+              "cargo",
+              "fmt",
+              "--check"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 140,
+            "stdout": ".ai/runtime/runs/run-IwJSQo/stdout.log",
+            "stderr": ".ai/runtime/runs/run-IwJSQo/stderr.log",
+            "diagnostics": [],
+            "tail": [],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-I20A6k",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked",
+              "--message-format=json"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 1328,
+            "stdout": ".ai/runtime/runs/run-I20A6k/stdout.log",
+            "stderr": ".ai/runtime/runs/run-I20A6k/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "test recovery_remains_bounded_after_large_history ... ok",
+              "test malformed_json_is_diagnosed ... ok",
+              "test aggregate_verification_and_long_command_display_stay_bounded ... ok",
+              "test unix::timeout_and_source_mutating_verification_fail ... ok",
+              "test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.16s",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.08s",
+              "Running unittests src/main.rs (target/debug/deps/aiw-99c58f2ac61c916c)",
+              "Running tests/cli.rs (target/debug/deps/cli-73465f0899eb1dbd)"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-4JCm6H",
+            "argv": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "--all-targets",
+              "--message-format=json",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 141,
+            "stdout": ".ai/runtime/runs/run-4JCm6H/stdout.log",
+            "stderr": ".ai/runtime/runs/run-4JCm6H/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-1mQoNJ",
+            "argv": [
+              "cargo",
+              "build",
+              "--release",
+              "--locked",
+              "--message-format=json"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 100,
+            "stdout": ".ai/runtime/runs/run-1mQoNJ/stdout.log",
+            "stderr": ".ai/runtime/runs/run-1mQoNJ/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Finished `release` profile [optimized] target(s) in 0.06s"
+            ],
+            "omitted": 0
+          }
+        ]
+      }
     }
   },
   "active_plan": "v01",
-  "active_task": "release",
+  "active_task": null,
   "checkpoint": {
-    "task": "release",
-    "next_action": "Run the final release contract and smoke-test the installed binary from a clean temporary Git repository",
-    "note": "Hardening and documentation accepted; offline installation succeeded; live provider smoke limitations are documented"
+    "task": null,
+    "next_action": "Next milestone: validate authenticated live Claude/Codex handoff on a writable host, then measure structural Rust retrieval. Completed v0.1 verification: aiw show task release.",
+    "note": "All v0.1 tasks are done. Reference CLI, schema, adapters, docs and CI are committed; runtime logs are disposable."
   }
 }
