@@ -1,0 +1,20 @@
+{
+  "name": "aiw-agent",
+  "version": "0.2.0",
+  "description": "Makes AIW recovery, task evidence, and checkpoint workflows available to coding agents.",
+  "author": {
+    "name": "AIW contributors"
+  },
+  "interface": {
+    "displayName": "AIW Agent",
+    "shortDescription": "Durable project state for disposable agents",
+    "longDescription": "Loads compact AIW recovery context and keeps active work tied to persisted task contracts and verification.",
+    "developerName": "AIW contributors",
+    "category": "Developer Tools",
+    "capabilities": ["Skills", "Hooks"],
+    "defaultPrompt": [
+      "Resume this project from its AIW workspace.",
+      "Adopt AIW for this unfinished repository."
+    ]
+  }
+}

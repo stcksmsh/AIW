@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0 — 2026-09-10
+
+Adds portable Codex and Claude project skills, merged SessionStart/SubagentStart
+hooks, opt-in strict Stop enforcement, a local user installer, and the `integrate`
+command. Generated bootstrap blocks now stay at the start of vendor instruction
+files so they remain visible under bounded instruction loading.
+
 ## 0.1.0 — 2026-09-10
 
 Initial reference implementation: workspace schema 1, task DAG and atomic claims,

@@ -21,8 +21,8 @@ Review fixed plan-objective freshness, unbounded aggregate verification output,
 receipt validation, overbroad non-Git directory exclusion, and symlink ancestors
 in tracked paths. Dogfooding verification also caught successful test names and
 `0 failed` summaries being misclassified as diagnostics; a regression test now
-keeps these in the tail only. The suite now contains 3 diagnostic unit tests and 30 CLI
-integration tests, including output storms and a 2 MB single-line raw log.
+keeps these in the tail only. The v0.1 suite contained 3 diagnostic unit tests and
+30 CLI integration tests, including output storms and a 2 MB single-line raw log.
 
 ## Provider-neutral disappearance scenario
 
@@ -41,14 +41,32 @@ fresh, independent CLI processes:
 All steps pass. No format conversion or vendor memory is involved. The Git
 worktree test separately confirms that `.git` files and clean cloned state work.
 
-Live installed-client smoke tests were also attempted with no conversation resume:
-Claude Code (`--no-session-persistence`, read tools only) timed out after 40 seconds
-without output; Codex (`exec --ephemeral --sandbox read-only`) could not initialize
-because its own local state database was read-only in this execution environment.
-These are **not** successful live provider round trips. The deterministic protocol
-scenario is covered; end-to-end authenticated adapter behavior remains a manual
-acceptance check in an environment where both clients can initialize normally.
-AIW's timeout/failure capture retained compact receipts for both attempts.
+## v0.2 installed-agent recovery trial
+
+The v0.2 integration was tested against an isolated snapshot of an interrupted
+Hysteresis checkout. Its root `AGENTS.md` was 64,404 bytes, and Codex reported
+truncating it at the 32 KiB instruction budget. The generated AIW bootstrap was
+still present because v0.2 places it at the beginning. AIW reconstructed the
+latest Julia-render feedback as a bounded task contract with acceptance, scope,
+constraints, verification commands, and the exact known failing frame.
+
+A fresh ephemeral Codex process with no prior conversation loaded the project
+skill, ran `aiw load`, showed and claimed the task, and reproduced the boundary
+regression at frame 399 (`zoom=0.37996876`, escape spread 0). It was intentionally
+stopped when the user selected Claude for the continuing trial; it made no scoped
+source edits. A fresh authenticated Claude Code 2.1.268 process then:
+
+1. ran the generated `SessionStart` hook successfully;
+2. received the bounded recovery packet as hook context;
+3. discovered and explicitly launched the personal `aiw-workspace` skill;
+4. ran `aiw load`, read the task, and claimed it as `claude-aiw-trial`;
+5. reproduced the same existing failing `hyst-render` boundary test.
+
+This is a successful live provider round trip for startup injection, skill
+discovery, canonical recovery, claim transfer, and baseline reproduction. The
+visual fix and full 90-second rendered acceptance remain work in the isolated
+Hysteresis task, not evidence for AIW's own release. The original Hysteresis
+checkout was not modified.
 
 ## Recovery budget measurement
 
@@ -71,6 +89,8 @@ No provider-specific tokenizer is assumed or token count invented.
 
 `cargo fmt --check`, `cargo clippy --locked --all-targets -- -D warnings`,
 `cargo test --locked`, and a release build are the final declared release contract.
+v0.2 adds 3 CLI integration tests (33 total, plus 3 unit tests) covering merged
+hook configuration, install idempotency, startup context, and strict-stop behavior.
 The generated schema is checked against the committed schema and the example is
 parsed by the real CLI. Python jsonschema is not installed locally; no independent
 JSON Schema validator result is claimed. CI repeats Rust checks on Linux, macOS

@@ -16,6 +16,7 @@ No operation itself invokes an LLM. Human/agent judgment supplies semantic inten
 - [index](index.md)
 - [probe](probe.md)
 - [adapter](adapter.md)
+- [integrate and lifecycle hooks](integrate.md)
 - [doctor](doctor.md)
 - [schema](schema.md)
 

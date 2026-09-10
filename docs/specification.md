@@ -138,6 +138,13 @@ task in the active plan, using stable ID order. Completed history is omitted unl
 explicitly requested. Truncation MUST be visible with a drill-down instruction.
 State parsing cost can grow with history even though output does not.
 
+Skills, vendor instruction files, and lifecycle hooks are noncanonical adapters.
+They MAY inject `load` output at session start. A strict stop hook MAY request one
+additional agent turn while the active task is pending or in progress, but MUST
+allow a repeated stop attempt and MUST allow persisted blocked or terminal state.
+This guard enforces state persistence, not semantic correctness. Only the task
+state machine and fresh verification evidence permit a transition to done.
+
 ## Derived and runtime formats
 
 Index v1 contains provenance `aiw-lexical-v1` and a sorted map of file hash, bytes,

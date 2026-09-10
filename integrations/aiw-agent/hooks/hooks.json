@@ -1,0 +1,44 @@
+{
+  "description": "Load AIW state for enabled repositories and guard unfinished active tasks.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "aiw hook session-start",
+            "timeout": 10,
+            "additionalContextLimit": 2500,
+            "statusMessage": "Loading AIW workspace"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "aiw hook session-start",
+            "timeout": 10,
+            "additionalContextLimit": 2500,
+            "statusMessage": "Loading AIW task context"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "aiw hook stop --strict",
+            "timeout": 10,
+            "statusMessage": "Checking AIW task state"
+          }
+        ]
+      }
+    ]
+  }
+}

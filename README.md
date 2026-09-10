@@ -8,17 +8,24 @@ intent and task contracts in Git-friendly files, recovers a small context packet
 and runs verification without dumping build logs into the conversation.
 
 No model, account, server, database, or network connection is required at runtime.
-This is a working v0.1 reference implementation, not an agent orchestration service.
+This is a working v0.2 reference implementation, not an agent orchestration service.
 
 ## Install
 
 Requires Rust 1.93 or newer. Git is strongly recommended; plain directories work.
 
+Install the CLI and personal `aiw-workspace` skill for Codex and Claude Code from
+an AIW checkout:
+
 ```sh
-cargo install --path . --locked
+./scripts/install-user.sh
 aiw --version
 aiw doctor
 ```
+
+The script keeps the binary in Cargo's user install directory (normally
+`~/.cargo/bin`) and skills in `~/.agents/skills` and `~/.claude/skills`. For a
+CLI-only install, use `cargo install --path . --locked`.
 
 For development, use `cargo run -- <arguments>` or `target/debug/aiw` after
 `cargo build`. The crate is not published. No license has been selected by the
@@ -31,7 +38,7 @@ argv with that project's actual acceptance command.
 
 ```sh
 aiw init --name example
-aiw adapter all
+aiw integrate all --enforcement strict
 aiw plan add first 'First release' --objective 'Ship the smallest verified feature'
 aiw task add feature 'Implement the feature' --plan first \
   --scope src --scope tests \
@@ -63,6 +70,14 @@ aiw handoff --task feature --budget 4096
 nonzero exit code. `show` is an explicit, potentially large detail view. Run from
 subdirectories or use `aiw -C /path/to/project load`.
 
+`integrate` installs the portable project skill, prepends small generated pointers
+to `AGENTS.md` and `CLAUDE.md`, and merges lifecycle hooks without replacing other
+settings. `observe` injects `aiw load` on session and subagent startup. `strict`
+also asks an agent to continue once when its active AIW task remains pending or in
+progress. A blocked, cancelled, or completed task exits normally. Codex requires
+the repository to be trusted and its project hooks reviewed in `/hooks`; restart
+the agent after changing hooks.
+
 ## What is durable?
 
 | Location | Role | Normally tracked? |
@@ -73,6 +88,8 @@ subdirectories or use `aiw -C /path/to/project load`.
 | `.ai/derived/` | Discovery and incremental lexical index | No |
 | `.ai/runtime/` | Raw output, run receipts, locks, optional events | No |
 | `AGENTS.md`, `CLAUDE.md` | Generated bootstrap blocks with local extensions | Yes; noncanonical |
+| `.agents/skills`, `.claude/skills` | Generated agent workflow skill | Yes; noncanonical |
+| `.codex/hooks.json`, `.claude/settings.json` | Merged lifecycle hooks | Yes; noncanonical |
 
 Edit project metadata and invariants in `.ai/state.json`, then run `aiw doctor`.
 Use CLI mutations for tasks; `task edit ID --file task.json` replaces a pending or
@@ -129,11 +146,13 @@ service. See [worker workflow](docs/operations/task.md).
 - [Architecture decision](docs/adr/0001-local-workspace.md)
 - [Official-source research and adapter choices](docs/research.md)
 - [Operation contracts](docs/operations/README.md)
+- [Agent integration and lifecycle hooks](docs/operations/integrate.md)
+- [Guide for agents using the AIW skill](docs/agent-integration-guide.md)
 - [Dogfood and recovery evidence](docs/dogfood.md)
 - [Example workspace](examples/minimal-state.json)
 - [Changelog](CHANGELOG.md)
 
-v0.1 deliberately omits semantic symbol resolution, embeddings, MCP/LSP services,
+v0.2 deliberately omits semantic symbol resolution, embeddings, MCP/LSP services,
 automatic worker launching/merging, releases, and provider billing integrations.
 The next milestone is measured structural Rust retrieval and a broader workspace
 corpus, driven by recovery quality and bytes saved rather than abstraction count.

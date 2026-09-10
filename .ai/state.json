@@ -14,9 +14,192 @@
     "v01": {
       "title": "AIW v0.1",
       "objective": "Prove durable vendor-neutral recovery with verified deterministic tooling"
+    },
+    "v02": {
+      "title": "AIW v0.2 agent integration",
+      "objective": "Make AIW automatically discoverable and enforce its durable lifecycle in Codex and Claude while keeping the CLI canonical"
     }
   },
   "tasks": {
+    "agent-integration": {
+      "title": "Ship skills, lifecycle hooks, and user installation",
+      "plan": "v02",
+      "status": "done",
+      "dependencies": [],
+      "scope": [
+        "src/adapter.rs",
+        "src/hook.rs",
+        "src/main.rs",
+        "tests/cli.rs",
+        "integrations/aiw-agent",
+        "scripts/install-user.sh",
+        "README.md",
+        "CHANGELOG.md",
+        "docs",
+        "Cargo.toml",
+        "Cargo.lock",
+        "AGENTS.md",
+        "CLAUDE.md",
+        ".agents",
+        ".claude",
+        ".codex"
+      ],
+      "acceptance": [
+        "Codex and Claude discover the portable aiw-workspace skill at project and user scope",
+        "Session and subagent startup inject a bounded AIW recovery packet",
+        "Opt-in strict stop enforcement continues unfinished work once and allows blocked or terminal work",
+        "Integration preserves unrelated settings and remains idempotent",
+        "A documented user installer keeps aiw on PATH and copies both personal skills",
+        "A fresh Claude process completes hook injection, skill discovery, AIW load, and task claim without conversation history"
+      ],
+      "constraints": [
+        "Canonical workspace state remains vendor-neutral",
+        "Strict enforcement must have an explicit loop guard and cannot manufacture completion evidence"
+      ],
+      "verify": [
+        {
+          "argv": [
+            "cargo",
+            "fmt",
+            "--all",
+            "--",
+            "--check"
+          ],
+          "timeout_seconds": 1200
+        },
+        {
+          "argv": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "--all-targets",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "timeout_seconds": 1200
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked"
+          ],
+          "timeout_seconds": 1200
+        },
+        {
+          "argv": [
+            "cargo",
+            "build",
+            "--release",
+            "--locked"
+          ],
+          "timeout_seconds": 1200
+        }
+      ],
+      "worker": "codex",
+      "blocker": null,
+      "result": "Shipped AIW v0.2 with portable Codex/Claude skills, merged startup and strict-stop hooks, user installation, 33 CLI integration tests, validated plugin packaging, and a successful fresh Claude startup-skill-load-claim trial.",
+      "evidence": {
+        "source_hash": "2b55f99040d557a769e67e44f2b604d2baa0bf64fa1375b340fd653bf2a817d9",
+        "contract_hash": "1a2ab0b82e72bce002343610101c51f0ee9ff8c44da45b839e0cdc078f79a675",
+        "success": true,
+        "runs": [
+          {
+            "schema_version": 1,
+            "id": "run-WxveWT",
+            "argv": [
+              "cargo",
+              "fmt",
+              "--all",
+              "--",
+              "--check"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 403,
+            "stdout": ".ai/runtime/runs/run-WxveWT/stdout.log",
+            "stderr": ".ai/runtime/runs/run-WxveWT/stderr.log",
+            "diagnostics": [],
+            "tail": [],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-AMhRPz",
+            "argv": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "--all-targets",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 322,
+            "stdout": ".ai/runtime/runs/run-AMhRPz/stdout.log",
+            "stderr": ".ai/runtime/runs/run-AMhRPz/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.15s"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-qBOgpT",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 1572,
+            "stdout": ".ai/runtime/runs/run-qBOgpT/stdout.log",
+            "stderr": ".ai/runtime/runs/run-qBOgpT/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "test recovery_remains_bounded_after_large_history ... ok",
+              "test aggregate_verification_and_long_command_display_stay_bounded ... ok",
+              "test malformed_json_is_diagnosed ... ok",
+              "test unix::timeout_and_source_mutating_verification_fail ... ok",
+              "test result: ok. 33 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.30s",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.14s",
+              "Running unittests src/main.rs (target/debug/deps/aiw-3497df528764ce9d)",
+              "Running tests/cli.rs (target/debug/deps/cli-ed7a4b5f875b9bf9)"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-hpjLvY",
+            "argv": [
+              "cargo",
+              "build",
+              "--release",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 202,
+            "stdout": ".ai/runtime/runs/run-hpjLvY/stdout.log",
+            "stderr": ".ai/runtime/runs/run-hpjLvY/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Finished `release` profile [optimized] target(s) in 0.08s"
+            ],
+            "omitted": 0
+          }
+        ]
+      }
+    },
     "docs": {
       "title": "Publish specification and practical workflows",
       "plan": "v01",
@@ -351,7 +534,7 @@
       }
     }
   },
-  "active_plan": "v01",
+  "active_plan": "v02",
   "active_task": null,
   "checkpoint": {
     "task": null,

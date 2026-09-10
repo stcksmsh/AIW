@@ -1,4 +1,5 @@
 mod adapter;
+mod hook;
 mod index;
 mod model;
 mod repo;
@@ -99,9 +100,39 @@ enum Op {
         #[arg(value_parser = ["all", "codex", "claude"], default_value = "all")]
         vendor: String,
     },
+    /// Install project skills, bootstrap files, and optional lifecycle enforcement.
+    Integrate {
+        #[arg(value_parser = ["all", "codex", "claude"], default_value = "all")]
+        vendor: String,
+        #[arg(long, value_enum, default_value_t = Enforcement::Observe)]
+        enforcement: Enforcement,
+    },
+    /// Agent lifecycle entrypoints. Intended for generated hook configuration.
+    #[command(hide = true)]
+    Hook {
+        #[command(subcommand)]
+        action: HookOp,
+    },
     Doctor,
     /// Export the language-independent workspace JSON Schema.
     Schema,
+}
+
+#[derive(Clone, Copy, Debug, clap::ValueEnum)]
+enum Enforcement {
+    /// Inject recovery context at session and subagent start.
+    Observe,
+    /// Also continue a turn once while its active task is unfinished.
+    Strict,
+}
+
+#[derive(Subcommand)]
+enum HookOp {
+    SessionStart,
+    Stop {
+        #[arg(long)]
+        strict: bool,
+    },
 }
 #[derive(Subcommand)]
 enum PlanOp {
@@ -173,6 +204,20 @@ fn main() {
 }
 fn dispatch(cli: Cli) -> Result<()> {
     let start = Instant::now();
+    if let Op::Hook { action } = &cli.command {
+        let outcome = match action {
+            HookOp::SessionStart => hook::session_start()?,
+            HookOp::Stop { strict } => hook::stop(*strict)?,
+        };
+        if let Some(context) = outcome.context {
+            println!("{context}");
+        }
+        if let Some(reason) = outcome.block {
+            eprintln!("{reason}");
+            std::process::exit(2);
+        }
+        return Ok(());
+    }
     if matches!(cli.command, Op::Schema) {
         return print(&schemars::schema_for!(model::State));
     }
@@ -214,6 +259,7 @@ fn dispatch(cli: Cli) -> Result<()> {
         Op::Index => "index",
         Op::Probe { .. } => "probe",
         Op::Adapter { .. } => "adapter",
+        Op::Integrate { .. } => "integrate",
         _ => "other",
     };
     let result = (|| -> Result<()> {
@@ -433,7 +479,15 @@ fn dispatch(cli: Cli) -> Result<()> {
             }
             Op::Probe { query, limit } => print(&index::probe(&ws, &query, limit)?)?,
             Op::Adapter { vendor } => print(&json!({"generated":adapter::generate(&ws,&vendor)?}))?,
-            Op::Init { .. } | Op::Doctor | Op::Schema => unreachable!(),
+            Op::Integrate {
+                vendor,
+                enforcement,
+            } => print(&json!({
+                "generated": adapter::integrate(&ws, &vendor, matches!(enforcement, Enforcement::Strict))?,
+                "enforcement": format!("{enforcement:?}").to_lowercase(),
+                "next": "restart the agent; Codex users must review/trust project hooks with /hooks"
+            }))?,
+            Op::Init { .. } | Op::Doctor | Op::Schema | Op::Hook { .. } => unreachable!(),
         }
         Ok(())
     })();

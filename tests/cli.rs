@@ -1,8 +1,9 @@
 use serde_json::{Value, json};
 use std::{
     fs,
+    io::Write,
     path::Path,
-    process::{Command, Output},
+    process::{Command, Output, Stdio},
 };
 use tempfile::TempDir;
 const BIN: &str = env!("CARGO_BIN_EXE_aiw");
@@ -28,6 +29,24 @@ impl Repo {
             .env_remove("AIW_AGENT")
             .output()
             .unwrap()
+    }
+    fn call_stdin(&self, args: &[&str], input: &Value) -> Output {
+        let mut child = Command::new(BIN)
+            .args(args)
+            .current_dir(self.path())
+            .env_remove("AIW_AGENT")
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        child
+            .stdin
+            .take()
+            .unwrap()
+            .write_all(serde_json::to_string(input).unwrap().as_bytes())
+            .unwrap();
+        child.wait_with_output().unwrap()
     }
     fn ok(&self, args: &[&str]) -> String {
         let out = self.call(args);
@@ -397,13 +416,118 @@ fn adapter_blocks_preserve_user_content_and_are_idempotent() {
     let before = fs::read(r.path().join("AGENTS.md")).unwrap();
     r.ok(&["adapter"]);
     assert_eq!(before, fs::read(r.path().join("AGENTS.md")).unwrap());
-    assert!(
-        String::from_utf8(before)
-            .unwrap()
-            .starts_with("User policy")
-    );
+    let content = String::from_utf8(before).unwrap();
+    assert!(content.starts_with("<!-- aiw:begin generated v1 -->"));
+    assert!(content.ends_with("User policy\n"));
     r.write("CLAUDE.md", "<!-- aiw:begin generated v1 -->\npartial");
     r.err(&["adapter"], "incomplete");
+}
+#[test]
+fn integrate_installs_skills_and_merges_hooks_idempotently() {
+    let r = Repo::new(false);
+    r.write(
+        ".codex/hooks.json",
+        r#"{"custom":true,"hooks":{"SessionStart":[{"hooks":[{"type":"command","command":"echo existing"}]}],"Stop":[{"hooks":[{"type":"command","command":"echo stop"}]}]}}"#,
+    );
+    r.write(
+        ".claude/settings.json",
+        r#"{"permissions":{"allow":["Read"]}}"#,
+    );
+    r.ok(&["integrate", "all", "--enforcement", "strict"]);
+
+    for path in [
+        ".agents/skills/aiw-workspace/SKILL.md",
+        ".agents/skills/aiw-workspace/references/adopt.md",
+        ".agents/skills/aiw-workspace/references/lifecycle.md",
+        ".claude/skills/aiw-workspace/SKILL.md",
+        ".claude/skills/aiw-workspace/references/adopt.md",
+        ".claude/skills/aiw-workspace/references/lifecycle.md",
+    ] {
+        assert!(r.path().join(path).is_file(), "missing {path}");
+    }
+    let codex: Value =
+        serde_json::from_slice(&fs::read(r.path().join(".codex/hooks.json")).unwrap()).unwrap();
+    let claude: Value =
+        serde_json::from_slice(&fs::read(r.path().join(".claude/settings.json")).unwrap()).unwrap();
+    assert_eq!(codex["custom"], true);
+    assert_eq!(codex["hooks"]["SessionStart"].as_array().unwrap().len(), 2);
+    assert_eq!(codex["hooks"]["Stop"].as_array().unwrap().len(), 2);
+    assert_eq!(claude["permissions"]["allow"][0], "Read");
+    assert_eq!(claude["hooks"]["Stop"].as_array().unwrap().len(), 1);
+
+    let before = [
+        fs::read(r.path().join("AGENTS.md")).unwrap(),
+        fs::read(r.path().join(".codex/hooks.json")).unwrap(),
+        fs::read(r.path().join(".claude/settings.json")).unwrap(),
+    ];
+    r.ok(&["integrate", "all", "--enforcement", "strict"]);
+    assert_eq!(before[0], fs::read(r.path().join("AGENTS.md")).unwrap());
+    assert_eq!(
+        before[1],
+        fs::read(r.path().join(".codex/hooks.json")).unwrap()
+    );
+    assert_eq!(
+        before[2],
+        fs::read(r.path().join(".claude/settings.json")).unwrap()
+    );
+
+    r.ok(&["integrate", "all", "--enforcement", "observe"]);
+    let codex: Value =
+        serde_json::from_slice(&fs::read(r.path().join(".codex/hooks.json")).unwrap()).unwrap();
+    assert_eq!(codex["hooks"]["Stop"].as_array().unwrap().len(), 1);
+    assert_eq!(
+        codex["hooks"]["Stop"][0]["hooks"][0]["command"],
+        "echo stop"
+    );
+}
+#[test]
+fn integrate_validates_hook_configs_before_writing() {
+    let r = Repo::new(false);
+    r.write(".codex/hooks.json", "[]");
+    r.err(&["integrate", "codex"], "must be a JSON object");
+    assert!(!r.path().join("AGENTS.md").exists());
+    assert!(!r.path().join(".agents/skills/aiw-workspace").exists());
+}
+#[test]
+fn lifecycle_hooks_load_context_and_guard_unfinished_work_once() {
+    let r = Repo::new(false);
+    r.plan();
+    r.task("active", &[]);
+    r.ok(&["task", "focus", "active"]);
+    let cwd = r.path().to_str().unwrap();
+
+    let start = r.call_stdin(&["hook", "session-start"], &json!({"cwd":cwd}));
+    assert!(start.status.success());
+    let packet = String::from_utf8(start.stdout).unwrap();
+    assert!(packet.contains("AIW lifecycle integration is active"));
+    assert!(packet.contains("Task active"));
+
+    let stop = r.call_stdin(
+        &["hook", "stop", "--strict"],
+        &json!({"cwd":cwd,"stop_hook_active":false}),
+    );
+    assert_eq!(stop.status.code(), Some(2));
+    assert!(String::from_utf8_lossy(&stop.stderr).contains("active task active is pending"));
+
+    let repeated = r.call_stdin(
+        &["hook", "stop", "--strict"],
+        &json!({"cwd":cwd,"stop_hook_active":true}),
+    );
+    assert!(repeated.status.success());
+
+    r.ok(&[
+        "task",
+        "transition",
+        "active",
+        "blocked",
+        "--reason",
+        "Need an unavailable fixture",
+    ]);
+    let blocked = r.call_stdin(
+        &["hook", "stop", "--strict"],
+        &json!({"cwd":cwd,"stop_hook_active":false}),
+    );
+    assert!(blocked.status.success());
 }
 #[test]
 fn commands_preserve_argv_and_capture_failure() {

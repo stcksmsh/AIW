@@ -10,7 +10,9 @@
 
 **State written.** Marked bootstrap blocks in root adapter files.
 
-**Deterministic work.** Validate markers; preserve surrounding bytes; generate identical neutral pointers.
+**Deterministic work.** Validate markers; preserve surrounding content; generate
+identical neutral pointers at the beginning so bounded instruction loading sees
+the bootstrap.
 
 **LLM-required work.** Optional vendor enhancements outside markers only.
 
