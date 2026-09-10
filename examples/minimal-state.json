@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "project": {
+    "name": "Example",
+    "description": "A portable example workspace",
+    "invariants": [
+      "Preserve public API compatibility."
+    ]
+  },
+  "plans": {
+    "first": {
+      "title": "First release",
+      "objective": "Ship a tested library function"
+    }
+  },
+  "tasks": {
+    "feature": {
+      "title": "Add the library function",
+      "plan": "first",
+      "status": "pending",
+      "dependencies": [],
+      "scope": [
+        "src",
+        "tests"
+      ],
+      "acceptance": [
+        "Library tests exercise the function and pass."
+      ],
+      "constraints": [
+        "No service dependencies."
+      ],
+      "verify": [
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "--message-format=json"
+          ],
+          "timeout_seconds": 600
+        }
+      ],
+      "worker": null,
+      "blocker": null,
+      "result": null,
+      "evidence": null
+    }
+  },
+  "active_plan": "first",
+  "active_task": "feature",
+  "checkpoint": {
+    "task": "feature",
+    "next_action": "Read the task contract and inspect src/lib.rs",
+    "note": ""
+  }
+}
