@@ -378,6 +378,167 @@
         ]
       }
     },
+    "ci-fixture-command": {
+      "title": "Make compatibility fixture verification independent of PATH",
+      "plan": "v1",
+      "status": "done",
+      "dependencies": [],
+      "scope": [
+        "tests/cli.rs",
+        "examples/fixtures/workspace-v1"
+      ],
+      "acceptance": [
+        "Compatibility fixture lifecycle and evidence tests execute without an installed aiw command on PATH",
+        "The committed fixture remains a portable v1 interchange example while the test injects its own absolute test binary only for execution"
+      ],
+      "constraints": [
+        "Do not weaken fixture parsing, lifecycle, or evidence-freshness coverage"
+      ],
+      "verify": [
+        {
+          "argv": [
+            "cargo",
+            "fmt",
+            "--all",
+            "--",
+            "--check"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "--all-targets",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "build",
+            "--release",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        }
+      ],
+      "worker": "coordinator-ci-fix",
+      "blocker": null,
+      "result": "Compatibility fixture tests now parse the committed portable aiw command unchanged and inject Cargo’s absolute test binary only before execution, so lifecycle and evidence freshness verification no longer depends on PATH. The targeted test passed with PATH restricted to /usr/bin:/bin, and all declared checks passed.",
+      "evidence": {
+        "source_hash": "7712c807992f005365266f3ecf35dd25bf19903a4511a3785ed7ef6fcc5255b2",
+        "contract_hash": "ca1dd2a9f397c936e9910efeeb842882759dbabf48453b80b6f5cdf64da26417",
+        "success": true,
+        "runs": [
+          {
+            "schema_version": 1,
+            "id": "run-ZV39kT",
+            "argv": [
+              "cargo",
+              "fmt",
+              "--all",
+              "--",
+              "--check"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 140,
+            "stdout": ".ai/runtime/runs/run-ZV39kT/stdout.log",
+            "stderr": ".ai/runtime/runs/run-ZV39kT/stderr.log",
+            "diagnostics": [],
+            "tail": [],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-uEzYV4",
+            "argv": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "--all-targets",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 261,
+            "stdout": ".ai/runtime/runs/run-uEzYV4/stdout.log",
+            "stderr": ".ai/runtime/runs/run-uEzYV4/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Checking aiw v1.0.0 (/secondary/Programming/Github/AIW)",
+              "Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.18s"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-p4PguY",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 2270,
+            "stdout": ".ai/runtime/runs/run-p4PguY/stdout.log",
+            "stderr": ".ai/runtime/runs/run-p4PguY/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "test aggregate_verification_and_long_command_display_stay_bounded ... ok",
+              "test unix::timeout_and_source_mutating_verification_fail ... ok",
+              "test doctor_reports_read_only_integration_health_for_both_adapters ... ok",
+              "test result: ok. 42 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.92s",
+              "Compiling aiw v1.0.0 (/secondary/Programming/Github/AIW)",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.27s",
+              "Running unittests src/main.rs (target/debug/deps/aiw-48f647d5a5420b81)",
+              "Running tests/cli.rs (target/debug/deps/cli-07e5c8b06b349bc1)"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-SDsesu",
+            "argv": [
+              "cargo",
+              "build",
+              "--release",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 60,
+            "stdout": ".ai/runtime/runs/run-SDsesu/stdout.log",
+            "stderr": ".ai/runtime/runs/run-SDsesu/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Finished `release` profile [optimized] target(s) in 0.02s"
+            ],
+            "omitted": 0
+          }
+        ]
+      }
+    },
     "compatibility-fixtures": {
       "title": "Freeze and test the v1 workspace interoperability contract",
       "plan": "v1",
@@ -1807,9 +1968,9 @@
   "active_plan": "v1",
   "active_task": null,
   "checkpoint": {
-    "task": "release-distribution",
-    "next_action": "Run aiw load to confirm the v1 plan has no remaining runnable tasks. External GitHub Release publication remains an owner-authorized action after selecting the exact v1.0.0 tag commit.",
-    "note": "Worker release-distribution commit 0dfcdc4 was integrated as 63b0580, followed by README correction 057a5da. Coordinator rebuilt AIW 1.0.0 and re-verified all declared checks in master. The local release path is complete; external publication was intentionally not performed.",
-    "source_hash": "b0e0df21d12d7ab5fee542431fe709e41321493ce0e14b8e838a89643a0e781e"
+    "task": "ci-fixture-command",
+    "next_action": "Push the CI fixture regression fix to the branch that triggered the failing workflow, then wait for the Linux, macOS and Windows CI matrix.",
+    "note": "Fixed the cross-platform CI regression caused by the fixture executable name resolving only through a locally installed AIW. Full declared verification passed after formatting; the explicit no-AIW-on-PATH targeted test also passed.",
+    "source_hash": "6911bffc0fabe45a7c48a8ee283c5200e442ee98d5adb1cc77a9f9ad0f6170e0"
   }
 }

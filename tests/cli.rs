@@ -1181,6 +1181,24 @@ fn v1_compatibility_fixtures_cover_parsing_lifecycle_and_evidence_freshness() {
     );
     assert!(r.ok(&["load"]).contains("Fixture lifecycle task"));
 
+    // The committed fixture intentionally uses the portable `aiw` program name.
+    // Execute its lifecycle with Cargo's absolute test binary so this test does
+    // not depend on an unrelated user-level AIW installation being on PATH.
+    let mut executable_fixture: Value = serde_json::from_str(include_str!(
+        "../examples/fixtures/workspace-v1/valid-state.json"
+    ))
+    .unwrap();
+    for task in executable_fixture["tasks"]
+        .as_object_mut()
+        .unwrap()
+        .values_mut()
+    {
+        for command in task["verify"].as_array_mut().unwrap() {
+            command["argv"][0] = json!(BIN);
+        }
+    }
+    r.save(&executable_fixture);
+
     let transitions: Value = serde_json::from_str(include_str!(
         "../examples/fixtures/workspace-v1/task-transitions.json"
     ))
@@ -1221,6 +1239,7 @@ fn v1_compatibility_fixtures_cover_parsing_lifecycle_and_evidence_freshness() {
         ".ai/state.json",
         include_str!("../examples/fixtures/workspace-v1/valid-state.json"),
     );
+    r.save(&executable_fixture);
     let freshness: Value = serde_json::from_str(include_str!(
         "../examples/fixtures/workspace-v1/evidence-freshness.json"
     ))
