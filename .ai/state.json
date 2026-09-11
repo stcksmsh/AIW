@@ -1708,9 +1708,9 @@
   "active_plan": "v1",
   "active_task": "release-distribution",
   "checkpoint": {
-    "task": "release-trials",
-    "next_action": "Inspect the newly unblocked release-distribution task, then decide whether its requested publication target is locally executable or needs user-provided release credentials/target direction.",
-    "note": "Worker release-trials commit 2aa3485 was integrated as 867543a. Coordinator re-verified all declared checks in master before restoring done with fresh evidence. The release evidence records local lifecycle coverage and the provider-session limitation.",
-    "source_hash": "758f10187d9664d638c1cddff4bdc4539167f0fa56f6e9c3620dbbd1b8ccb2f7"
+    "task": "release-distribution",
+    "next_action": "Wait for the release-distribution worker commit, review and merge it directly into master, re-verify the combined checkout, then load AIW to confirm the v1 plan is complete.",
+    "note": "Coordinator integrated and re-verified release-trials. release-distribution is claimed by worker-release-distribution in /tmp/aiw-release-distribution on codex/release-distribution. It may implement and verify the local source-install release path but must not publish externally without separate owner authorization.",
+    "source_hash": "3879219ecd5a9e2462e3ff9abfe5eac9ca8246603b4e5d3956901a6885c3dc90"
   }
 }
