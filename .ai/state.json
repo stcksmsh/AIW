@@ -381,7 +381,7 @@
     "compatibility-fixtures": {
       "title": "Freeze and test the v1 workspace interoperability contract",
       "plan": "v1",
-      "status": "in_progress",
+      "status": "done",
       "dependencies": [
         "release-charter"
       ],
@@ -445,8 +445,120 @@
       ],
       "worker": "worker-compatibility-fixtures",
       "blocker": null,
-      "result": null,
-      "evidence": null
+      "result": "Committed v1 compatibility fixtures and automated coverage for canonical parsing, lifecycle transitions, evidence freshness, schema publication, and fail-closed malformed or unsupported state rejection.",
+      "evidence": {
+        "source_hash": "9fc0b8def7473852c278614cf52f146cf37b8a91b1e453759a5a982be6f1dc8b",
+        "contract_hash": "7bd8ea6c9c01b9963f6063325dec1822b2dd646aa07375a051ee64bdbbeab6a4",
+        "success": true,
+        "runs": [
+          {
+            "schema_version": 1,
+            "id": "run-nmSdsm",
+            "argv": [
+              "cargo",
+              "fmt",
+              "--all",
+              "--",
+              "--check"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 120,
+            "stdout": ".ai/runtime/runs/run-nmSdsm/stdout.log",
+            "stderr": ".ai/runtime/runs/run-nmSdsm/stderr.log",
+            "diagnostics": [],
+            "tail": [],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-vtWzJl",
+            "argv": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "--all-targets",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 2693,
+            "stdout": ".ai/runtime/runs/run-vtWzJl/stdout.log",
+            "stderr": ".ai/runtime/runs/run-vtWzJl/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Checking serde_json v1.0.151",
+              "Checking clap v4.6.6",
+              "Checking tempfile v3.27.0",
+              "Checking schemars v1.2.2",
+              "Checking globset v0.4.20",
+              "Checking ignore v0.4.33",
+              "Checking aiw v0.2.0 (/tmp/aiw-compatibility-fixtures)",
+              "Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.61s"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-2ccGtf",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 1268,
+            "stdout": ".ai/runtime/runs/run-2ccGtf/stdout.log",
+            "stderr": ".ai/runtime/runs/run-2ccGtf/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "test checkpoint_freshness_tracks_scoped_source_without_refreshing_evidence ... ok",
+              "test malformed_json_is_diagnosed ... ok",
+              "test aggregate_verification_and_long_command_display_stay_bounded ... ok",
+              "test unix::timeout_and_source_mutating_verification_fail ... ok",
+              "test result: ok. 39 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.15s",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s",
+              "Running unittests src/main.rs (target/debug/deps/aiw-3497df528764ce9d)",
+              "Running tests/cli.rs (target/debug/deps/cli-ed7a4b5f875b9bf9)"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-D3D2i0",
+            "argv": [
+              "cargo",
+              "build",
+              "--release",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 11252,
+            "stdout": ".ai/runtime/runs/run-D3D2i0/stdout.log",
+            "stderr": ".ai/runtime/runs/run-D3D2i0/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Compiling clap_derive v4.6.4",
+              "Compiling schemars_derive v1.2.2",
+              "Compiling globset v0.4.20",
+              "Compiling clap v4.6.6",
+              "Compiling ignore v0.4.33",
+              "Compiling schemars v1.2.2",
+              "Compiling aiw v0.2.0 (/tmp/aiw-compatibility-fixtures)",
+              "Finished `release` profile [optimized] target(s) in 11.22s"
+            ],
+            "omitted": 0
+          }
+        ]
+      }
     },
     "docs": {
       "title": "Publish specification and practical workflows",
@@ -1309,11 +1421,11 @@
     }
   },
   "active_plan": "v1",
-  "active_task": "compatibility-fixtures",
+  "active_task": null,
   "checkpoint": {
     "task": "compatibility-fixtures",
-    "next_action": "Wait for the compatibility-fixtures worker report and commit, review and integrate its branch in the coordinator checkout, then reassess the remaining ready task scopes before assigning another worker.",
-    "note": "Coordinator committed checkpoint-freshness as 09983a5, claimed compatibility-fixtures for worker-compatibility-fixtures, and created /tmp/aiw-compatibility-fixtures on codex/compatibility-fixtures. durability-audit and integration-health remain queued because all three ready tasks overlap in tests, docs and core scope.",
-    "source_hash": "86345043ea5c083c7844fe4c0a25c646f5da6962fba24889f09edd11d98905f1"
+    "next_action": "Coordinator should integrate commit after reviewing the verified compatibility-fixtures result.",
+    "note": "All four declared checks passed. The task is done with committed v1 state, lifecycle, evidence-freshness, and fail-closed parsing fixtures and automated coverage.",
+    "source_hash": "dd7a14ef4f4098366dc4c7bc172ed68ca553b76ddedab24429c399c09c110137"
   }
 }

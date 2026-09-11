@@ -997,6 +997,115 @@ fn published_schema_and_example_match_the_parser() {
     );
     assert!(r.ok(&["load"]).contains("Add the library function"));
 }
+
+#[test]
+fn v1_compatibility_fixtures_cover_parsing_lifecycle_and_evidence_freshness() {
+    let r = Repo::new(false);
+    r.write(
+        ".ai/state.json",
+        include_str!("../examples/fixtures/workspace-v1/valid-state.json"),
+    );
+    assert!(r.ok(&["load"]).contains("Fixture lifecycle task"));
+
+    let transitions: Value = serde_json::from_str(include_str!(
+        "../examples/fixtures/workspace-v1/task-transitions.json"
+    ))
+    .unwrap();
+    let task = transitions["task"].as_str().unwrap();
+    for operation in transitions["operations"].as_array().unwrap() {
+        match operation["operation"].as_str().unwrap() {
+            "transition" => {
+                let to = operation["to"].as_str().unwrap();
+                let mut args = vec!["task", "transition", task, to];
+                if let Some(reason) = operation["reason"].as_str() {
+                    args.extend(["--reason", reason]);
+                }
+                if let Some(result) = operation["result"].as_str() {
+                    args.extend(["--result", result]);
+                }
+                r.ok(&args);
+            }
+            "claim" => {
+                r.ok(&[
+                    "task",
+                    "claim",
+                    task,
+                    "--worker",
+                    operation["worker"].as_str().unwrap(),
+                ]);
+            }
+            "verify" => {
+                r.ok(&["verify", task, "--allow-exec"]);
+            }
+            other => panic!("unknown compatibility operation {other}"),
+        }
+    }
+    assert_eq!(r.state()["tasks"][task]["status"], "done");
+
+    let r = Repo::new(false);
+    r.write(
+        ".ai/state.json",
+        include_str!("../examples/fixtures/workspace-v1/valid-state.json"),
+    );
+    let freshness: Value = serde_json::from_str(include_str!(
+        "../examples/fixtures/workspace-v1/evidence-freshness.json"
+    ))
+    .unwrap();
+    let task = freshness["task"].as_str().unwrap();
+    let path = freshness["path"].as_str().unwrap();
+    r.write(path, freshness["before"].as_str().unwrap());
+    r.ok(&["task", "claim", task, "--worker", "fixture-worker"]);
+    r.ok(&["verify", task, "--allow-exec"]);
+    assert_eq!(
+        r.json(&["status"])["verification"],
+        freshness["expected_verification"][0]
+    );
+    r.write(path, freshness["after"].as_str().unwrap());
+    assert_eq!(
+        r.json(&["status"])["verification"],
+        freshness["expected_verification"][1]
+    );
+    r.ok(&["verify", task, "--allow-exec"]);
+    assert_eq!(
+        r.json(&["status"])["verification"],
+        freshness["expected_verification"][2]
+    );
+}
+
+#[test]
+fn v1_compatibility_fixtures_reject_malformed_unknown_and_unsupported_state() {
+    let malformed = include_str!("../examples/fixtures/workspace-v1/invalid-json.json");
+    let unsupported = include_str!("../examples/fixtures/workspace-v1/unsupported-version.json");
+    let unknown: Value = serde_json::from_str(include_str!(
+        "../examples/fixtures/workspace-v1/unknown-field.json"
+    ))
+    .unwrap();
+
+    for (state, error) in [
+        (malformed, "invalid JSON"),
+        (
+            unsupported,
+            "unsupported or missing workspace schema_version",
+        ),
+    ] {
+        let r = Repo::new(false);
+        r.write(".ai/state.json", state);
+        let before = fs::read(r.path().join(".ai/state.json")).unwrap();
+        r.err(&["load"], error);
+        assert_eq!(before, fs::read(r.path().join(".ai/state.json")).unwrap());
+    }
+
+    let r = Repo::new(false);
+    let mut state: Value = serde_json::from_str(include_str!(
+        "../examples/fixtures/workspace-v1/valid-state.json"
+    ))
+    .unwrap();
+    state[unknown["field"].as_str().unwrap()] = unknown["value"].clone();
+    r.save(&state);
+    let before = fs::read(r.path().join(".ai/state.json")).unwrap();
+    r.err(&["load"], "unknown field");
+    assert_eq!(before, fs::read(r.path().join(".ai/state.json")).unwrap());
+}
 #[test]
 fn non_git_index_keeps_legitimate_runtime_directories_and_ignores_build_files() {
     let r = Repo::new(false);

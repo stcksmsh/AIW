@@ -1,0 +1,27 @@
+{
+  "fixture_version": 1,
+  "task": "active",
+  "operations": [
+    {
+      "operation": "transition",
+      "to": "blocked",
+      "reason": "Capture an explicit blocker before handoff."
+    },
+    {
+      "operation": "transition",
+      "to": "pending"
+    },
+    {
+      "operation": "claim",
+      "worker": "fixture-worker"
+    },
+    {
+      "operation": "verify"
+    },
+    {
+      "operation": "transition",
+      "to": "done",
+      "result": "The v1 lifecycle fixture passed."
+    }
+  ]
+}

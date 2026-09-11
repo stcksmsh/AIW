@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "project": {
+    "name": "AIW v1 compatibility fixture",
+    "description": "A complete canonical workspace used to test v1 interchange.",
+    "invariants": [
+      "Reject unknown canonical fields."
+    ]
+  },
+  "plans": {
+    "v1": {
+      "title": "Compatibility fixture",
+      "objective": "Exercise the frozen v1 workspace contract."
+    }
+  },
+  "tasks": {
+    "foundation": {
+      "title": "Completed dependency",
+      "plan": "v1",
+      "status": "done",
+      "dependencies": [],
+      "scope": [
+        "src"
+      ],
+      "acceptance": [
+        "A passing receipt is retained."
+      ],
+      "constraints": [],
+      "verify": [
+        {
+          "argv": [
+            "aiw",
+            "--version"
+          ],
+          "timeout_seconds": 60
+        }
+      ],
+      "worker": "fixture-worker",
+      "blocker": null,
+      "result": "The dependency completed with passing verification.",
+      "evidence": {
+        "source_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "contract_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "success": true,
+        "runs": [
+          {
+            "schema_version": 1,
+            "id": "fixture-run",
+            "argv": [
+              "aiw",
+              "--version"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 1,
+            "stdout": ".ai/runtime/runs/fixture-run/stdout.log",
+            "stderr": ".ai/runtime/runs/fixture-run/stderr.log",
+            "diagnostics": [],
+            "tail": [],
+            "omitted": 0
+          }
+        ]
+      }
+    },
+    "active": {
+      "title": "Fixture lifecycle task",
+      "plan": "v1",
+      "status": "pending",
+      "dependencies": [
+        "foundation"
+      ],
+      "scope": [
+        "src"
+      ],
+      "acceptance": [
+        "The fixture task can move through its declared lifecycle."
+      ],
+      "constraints": [
+        "Use deterministic local verification."
+      ],
+      "verify": [
+        {
+          "argv": [
+            "aiw",
+            "--version"
+          ],
+          "timeout_seconds": 60
+        }
+      ],
+      "worker": null,
+      "blocker": null,
+      "result": null,
+      "evidence": null
+    },
+    "blocked": {
+      "title": "Persisted blocked task",
+      "plan": "v1",
+      "status": "blocked",
+      "dependencies": [],
+      "scope": [],
+      "acceptance": [
+        "The blocker is preserved."
+      ],
+      "constraints": [],
+      "verify": [],
+      "worker": null,
+      "blocker": "The fixture records an explicit unblock action.",
+      "result": null,
+      "evidence": null
+    }
+  },
+  "active_plan": "v1",
+  "active_task": "active",
+  "checkpoint": {
+    "task": "active",
+    "next_action": "Run the fixture lifecycle.",
+    "note": "Fixture state is ready for deterministic local verification."
+  }
+}

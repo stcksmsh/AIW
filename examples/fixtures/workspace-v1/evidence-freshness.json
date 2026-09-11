@@ -1,0 +1,12 @@
+{
+  "fixture_version": 1,
+  "task": "active",
+  "path": "src/fixture.rs",
+  "before": "fn fixture() {}\n",
+  "after": "fn fixture_changed() {}\n",
+  "expected_verification": [
+    "passed",
+    "stale",
+    "passed"
+  ]
+}
