@@ -773,6 +773,97 @@ fn integrate_validates_hook_configs_before_writing() {
     assert!(!r.path().join(".claude/skills/aiw-workspace").exists());
 }
 #[test]
+fn doctor_reports_read_only_integration_health_for_both_adapters() {
+    let r = Repo::new(false);
+    let before = r.state();
+    let missing = r.json(&["doctor"]);
+    for vendor in ["codex", "claude"] {
+        assert_eq!(
+            missing["integrations"][vendor]["bootstrap"]["status"],
+            "missing"
+        );
+        assert_eq!(
+            missing["integrations"][vendor]["hooks"]["status"],
+            "missing"
+        );
+    }
+    assert_eq!(r.state(), before, "doctor must not change canonical state");
+
+    let coinstalled = json!({
+        "custom": {"owner": "third-party"},
+        "hooks": {
+            "SessionStart": [{"hooks": [{"type": "command", "command": "third-party start"}]}],
+            "Stop": [{"hooks": [{"type": "command", "command": "third-party stop"}]}]
+        }
+    });
+    for path in [".codex/hooks.json", ".claude/settings.json"] {
+        r.write(path, &coinstalled.to_string());
+    }
+    r.ok(&["integrate", "all", "--enforcement", "strict"]);
+    let healthy = r.json(&["doctor"]);
+    for vendor in ["codex", "claude"] {
+        assert_eq!(
+            healthy["integrations"][vendor]["bootstrap"]["status"],
+            "present"
+        );
+        assert_eq!(
+            healthy["integrations"][vendor]["skills"]["skill"]["status"],
+            "present"
+        );
+        assert_eq!(
+            healthy["integrations"][vendor]["skills"]["adopt"]["status"],
+            "present"
+        );
+        assert_eq!(
+            healthy["integrations"][vendor]["skills"]["lifecycle"]["status"],
+            "present"
+        );
+        assert_eq!(healthy["integrations"][vendor]["hooks"]["status"], "valid");
+        assert_eq!(
+            healthy["integrations"][vendor]["hooks"]["enforcement"],
+            "strict"
+        );
+        assert_eq!(
+            healthy["integrations"][vendor]["hooks"]["handlers"]["session_start"],
+            "present"
+        );
+        assert_eq!(
+            healthy["integrations"][vendor]["hooks"]["handlers"]["subagent_start"],
+            "present"
+        );
+        assert_eq!(
+            healthy["integrations"][vendor]["hooks"]["handlers"]["stop"],
+            "present"
+        );
+    }
+
+    r.write(".agents/skills/aiw-workspace/SKILL.md", "outdated skill\n");
+    let mut stale: Value =
+        serde_json::from_slice(&fs::read(r.path().join(".codex/hooks.json")).unwrap()).unwrap();
+    let handler = stale["hooks"]["SessionStart"]
+        .as_array_mut()
+        .unwrap()
+        .iter_mut()
+        .find(|group| group["hooks"][0]["command"] == "aiw hook session-start")
+        .unwrap();
+    handler["hooks"][0]["timeout"] = json!(5);
+    r.write(".codex/hooks.json", &stale.to_string());
+    let stale = r.json(&["doctor"]);
+    assert_eq!(
+        stale["integrations"]["codex"]["skills"]["skill"]["status"],
+        "stale"
+    );
+    assert_eq!(stale["integrations"]["codex"]["hooks"]["status"], "stale");
+    assert_eq!(stale["integrations"]["claude"]["hooks"]["status"], "valid");
+
+    r.write(".claude/settings.json", "{broken");
+    let malformed = r.json(&["doctor"]);
+    assert_eq!(
+        malformed["integrations"]["claude"]["hooks"]["status"],
+        "malformed"
+    );
+}
+#[test]
 fn lifecycle_hooks_load_context_and_guard_unfinished_work_once() {
     let r = Repo::new(false);
     r.plan();

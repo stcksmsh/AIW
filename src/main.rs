@@ -540,8 +540,14 @@ fn doctor(directory: &std::path::Path) -> Result<()> {
         .as_ref()
         .ok()
         .is_some_and(|ws| ws.root.join("AGENTS.override.md").exists());
+    let integrations = workspace
+        .as_ref()
+        .ok()
+        .filter(|_| valid)
+        .map(adapter::health)
+        .transpose()?;
     print(
-        &json!({"schema_version":1,"workspace_valid":valid,"error":error,"capabilities":capabilities,"codex_override_present":overrides,"notes":["Core has no provider dependency. Missing Git uses filesystem discovery.","Lexical index is built in; semantic LSP integration is deferred.","Ignored files, external dependencies and environment changes are outside verification fingerprints.","Commands execute with your privileges; AIW is not a sandbox.","Windows descendant-process timeout handling is best effort."]}),
+        &json!({"schema_version":1,"workspace_valid":valid,"error":error,"capabilities":capabilities,"codex_override_present":overrides,"integrations":integrations,"notes":["Integration diagnostics are read-only and do not require a provider binary, account, network connection, or another tool.","Only exact AIW lifecycle command handlers are inspected; unrelated handlers remain outside the diagnostic boundary.","Core has no provider dependency. Missing Git uses filesystem discovery.","Lexical index is built in; semantic LSP integration is deferred.","Ignored files, external dependencies and environment changes are outside verification fingerprints.","Commands execute with your privileges; AIW is not a sandbox.","Windows descendant-process timeout handling is best effort."]}),
     )?;
     if workspace.is_ok() {
         ensure!(valid, "workspace validation failed");

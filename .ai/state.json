@@ -1058,7 +1058,7 @@
     "integration-health": {
       "title": "Diagnose installed adapter and hook health without provider calls",
       "plan": "v1",
-      "status": "in_progress",
+      "status": "done",
       "dependencies": [
         "release-charter"
       ],
@@ -1124,8 +1124,120 @@
       ],
       "worker": "worker-integration-health",
       "blocker": null,
-      "result": null,
-      "evidence": null
+      "result": "Doctor now reports read-only Codex and Claude bootstrap, managed skill, and exact AIW lifecycle hook health; missing, malformed, stale, and co-installed configurations are covered by regression tests and all declared checks passed.",
+      "evidence": {
+        "source_hash": "5639215f70c404be5307d21012b72dc5ad9cda90d9444659116a9e4e075a4d2a",
+        "contract_hash": "5015512bf1ca7630ca356e5b67abd5c6ce75e574f62fb7d626152c8e50108676",
+        "success": true,
+        "runs": [
+          {
+            "schema_version": 1,
+            "id": "run-uYTbmW",
+            "argv": [
+              "cargo",
+              "fmt",
+              "--all",
+              "--",
+              "--check"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 164,
+            "stdout": ".ai/runtime/runs/run-uYTbmW/stdout.log",
+            "stderr": ".ai/runtime/runs/run-uYTbmW/stderr.log",
+            "diagnostics": [],
+            "tail": [],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-FZSzCy",
+            "argv": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "--all-targets",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 3040,
+            "stdout": ".ai/runtime/runs/run-FZSzCy/stdout.log",
+            "stderr": ".ai/runtime/runs/run-FZSzCy/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Checking clap v4.6.6",
+              "Checking serde v1.0.229",
+              "Checking serde_json v1.0.151",
+              "Checking schemars v1.2.2",
+              "Checking globset v0.4.20",
+              "Checking ignore v0.4.33",
+              "Checking aiw v0.2.0 (/tmp/aiw-integration-health)",
+              "Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.95s"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-ZiSgj7",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 2833,
+            "stdout": ".ai/runtime/runs/run-ZiSgj7/stdout.log",
+            "stderr": ".ai/runtime/runs/run-ZiSgj7/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "test aggregate_verification_and_long_command_display_stay_bounded ... ok",
+              "test unix::timeout_and_source_mutating_verification_fail ... ok",
+              "test doctor_reports_read_only_integration_health_for_both_adapters ... ok",
+              "test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.87s",
+              "Compiling aiw v0.2.0 (/tmp/aiw-integration-health)",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.90s",
+              "Running unittests src/main.rs (target/debug/deps/aiw-3497df528764ce9d)",
+              "Running tests/cli.rs (target/debug/deps/cli-ed7a4b5f875b9bf9)"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-HkLYWW",
+            "argv": [
+              "cargo",
+              "build",
+              "--release",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 11356,
+            "stdout": ".ai/runtime/runs/run-HkLYWW/stdout.log",
+            "stderr": ".ai/runtime/runs/run-HkLYWW/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Compiling clap_derive v4.6.4",
+              "Compiling schemars_derive v1.2.2",
+              "Compiling clap v4.6.6",
+              "Compiling globset v0.4.20",
+              "Compiling ignore v0.4.33",
+              "Compiling schemars v1.2.2",
+              "Compiling aiw v0.2.0 (/tmp/aiw-integration-health)",
+              "Finished `release` profile [optimized] target(s) in 11.31s"
+            ],
+            "omitted": 0
+          }
+        ]
+      }
     },
     "release": {
       "title": "Verify and exercise v0.1 release",
@@ -1508,11 +1620,11 @@
     }
   },
   "active_plan": "v1",
-  "active_task": "integration-health",
+  "active_task": null,
   "checkpoint": {
     "task": "integration-health",
-    "next_action": "Wait for the integration-health worker commit, review and merge it directly into master, re-verify the combined checkout, then load the plan for newly unblocked release work.",
-    "note": "Coordinator integrated and re-verified compatibility-fixtures and durability-audit. integration-health is claimed by worker-integration-health in /tmp/aiw-integration-health on codex/integration-health; no other ready implementation task is safe to dispatch concurrently.",
-    "source_hash": "444b2a827bd8893c6eb0dae1f990d2b478fbbe6de2b2fd5667fdc155b7aa37ff"
+    "next_action": "Run the declared integration-health verification, transition the task to done, and commit the diagnostic implementation.",
+    "note": "Doctor now reports read-only Codex and Claude bootstrap, skill, and exact AIW hook health; targeted missing, malformed, stale, and co-installed regression coverage passes.",
+    "source_hash": "f4072b41db263dc7feaf8a1ff5e94e2be35aa5a0674b1e3230ec0ce5e7f9db4a"
   }
 }

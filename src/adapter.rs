@@ -56,6 +56,169 @@ const ADOPT: &str =
 const LIFECYCLE: &str =
     include_str!("../integrations/aiw-agent/skills/aiw-workspace/references/lifecycle.md");
 
+fn bootstrap_health(ws: &Workspace, path: &str) -> Result<Value> {
+    let path = ws.path(path)?;
+    let status = if !path.exists() {
+        "missing"
+    } else {
+        let content = fs::read_to_string(&path)?;
+        match (content.matches(BEGIN).count(), content.matches(END).count()) {
+            (1, 1) if content.find(END) > content.find(BEGIN) => "present",
+            _ => "malformed",
+        }
+    };
+    Ok(json!({"path": path.strip_prefix(&ws.root).unwrap_or(&path), "status": status}))
+}
+
+fn skill_health(ws: &Workspace, path: &str, expected: &str) -> Result<Value> {
+    let path = ws.path(path)?;
+    let status = if !path.exists() {
+        "missing"
+    } else if fs::read_to_string(&path)? == expected {
+        "present"
+    } else {
+        "stale"
+    };
+    Ok(json!({"path": path.strip_prefix(&ws.root).unwrap_or(&path), "status": status}))
+}
+
+fn hook_health(ws: &Workspace, path: &str) -> Result<Value> {
+    let path = ws.path(path)?;
+    let display = path.strip_prefix(&ws.root).unwrap_or(&path);
+    if !path.exists() {
+        return Ok(json!({
+            "path": display,
+            "status": "missing",
+            "enforcement": null,
+            "handlers": {"session_start": "missing", "subagent_start": "missing", "stop": "missing"}
+        }));
+    }
+    let root: Value = match crate::workspace::read_json(&path) {
+        Ok(value) => value,
+        Err(error) => {
+            return Ok(json!({"path": display, "status": "malformed", "error": error.to_string()}));
+        }
+    };
+    let Some(hooks) = root.as_object().and_then(|root| root.get("hooks")) else {
+        return Ok(json!({
+            "path": display,
+            "status": "missing",
+            "enforcement": null,
+            "handlers": {"session_start": "missing", "subagent_start": "missing", "stop": "missing"}
+        }));
+    };
+    let Some(hooks) = hooks.as_object() else {
+        return Ok(
+            json!({"path": display, "status": "malformed", "error": "hooks must be a JSON object"}),
+        );
+    };
+
+    let mut found = serde_json::Map::new();
+    let mut malformed = None;
+    for (event, command, name) in [
+        ("SessionStart", "aiw hook session-start", "session_start"),
+        ("SubagentStart", "aiw hook session-start", "subagent_start"),
+        ("Stop", "aiw hook stop --strict", "stop"),
+    ] {
+        let Some(groups) = hooks.get(event) else {
+            found.insert(name.into(), json!("missing"));
+            continue;
+        };
+        let Some(groups) = groups.as_array() else {
+            malformed = Some(format!("hooks.{event} must be an array"));
+            break;
+        };
+        let mut owned = Vec::new();
+        for group in groups {
+            let Some(handlers) = group.as_object().and_then(|group| group.get("hooks")) else {
+                continue;
+            };
+            let Some(handlers) = handlers.as_array() else {
+                malformed = Some(format!("hooks.{event} group hooks must be an array"));
+                break;
+            };
+            for handler in handlers {
+                if is_aiw_hook_handler(handler)
+                    && handler.get("command").and_then(Value::as_str) == Some(command)
+                {
+                    owned.push((group, handler));
+                }
+            }
+            if malformed.is_some() {
+                break;
+            }
+        }
+        if malformed.is_some() {
+            break;
+        }
+        let expected = group(event, true);
+        let valid = owned.len() == 1
+            && *owned[0].1 == expected["hooks"][0]
+            && (event != "SessionStart" || owned[0].0["matcher"] == expected["matcher"]);
+        found.insert(
+            name.into(),
+            json!(if owned.is_empty() {
+                "missing"
+            } else if valid {
+                "present"
+            } else {
+                "stale"
+            }),
+        );
+    }
+    if let Some(error) = malformed {
+        return Ok(json!({"path": display, "status": "malformed", "error": error}));
+    }
+    let startup_ok = found["session_start"] == "present" && found["subagent_start"] == "present";
+    let stop = found["stop"].as_str().unwrap_or("missing");
+    let status = if !startup_ok {
+        if found["session_start"] == "stale" || found["subagent_start"] == "stale" {
+            "stale"
+        } else {
+            "missing"
+        }
+    } else if stop == "stale" {
+        "stale"
+    } else {
+        "valid"
+    };
+    let enforcement = if startup_ok && stop == "present" {
+        "strict"
+    } else if startup_ok && stop == "missing" {
+        "observe"
+    } else {
+        "unknown"
+    };
+    Ok(json!({"path": display, "status": status, "enforcement": enforcement, "handlers": found}))
+}
+
+/// Read-only diagnostics for the project-scoped Codex and Claude adapters.
+/// Only exact AIW command handlers are examined; unrelated handler behavior is ignored.
+pub fn health(ws: &Workspace) -> Result<Value> {
+    let codex_skills = json!({
+        "skill": skill_health(ws, ".agents/skills/aiw-workspace/SKILL.md", SKILL)?,
+        "adopt": skill_health(ws, ".agents/skills/aiw-workspace/references/adopt.md", ADOPT)?,
+        "lifecycle": skill_health(ws, ".agents/skills/aiw-workspace/references/lifecycle.md", LIFECYCLE)?,
+    });
+    let claude_skills = json!({
+        "skill": skill_health(ws, ".claude/skills/aiw-workspace/SKILL.md", SKILL)?,
+        "adopt": skill_health(ws, ".claude/skills/aiw-workspace/references/adopt.md", ADOPT)?,
+        "lifecycle": skill_health(ws, ".claude/skills/aiw-workspace/references/lifecycle.md", LIFECYCLE)?,
+    });
+    Ok(json!({
+        "codex": {
+            "bootstrap": bootstrap_health(ws, "AGENTS.md")?,
+            "skills": codex_skills,
+            "hooks": hook_health(ws, ".codex/hooks.json")?
+        },
+        "claude": {
+            "bootstrap": bootstrap_health(ws, "CLAUDE.md")?,
+            "skills": claude_skills,
+            "hooks": hook_health(ws, ".claude/settings.json")?
+        }
+    }))
+}
+
 fn is_aiw_hook_handler(value: &Value) -> bool {
     let Some(handler) = value.as_object() else {
         return false;
