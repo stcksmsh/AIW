@@ -1311,9 +1311,9 @@
   "active_plan": "v1",
   "active_task": "compatibility-fixtures",
   "checkpoint": {
-    "task": "checkpoint-freshness",
-    "next_action": "Run /secondary/Programming/Github/AIW/target/release/aiw load to select the next v1 task; use the rebuilt client for checkpoints containing source_hash.",
-    "note": "Implemented scoped checkpoint source fingerprints, load/status freshness and strict-stop checkpoint guidance while preserving verification evidence and the one-repeat guard. All four declared checks passed: fmt, Clippy with warnings denied, full tests and release build. Scope expansion for main.rs and the published schema was approved by the user.",
-    "source_hash": "8d2ef224ed63977b243c8add1b944f907b577b94e563221c02616f8f413189a5"
+    "task": "compatibility-fixtures",
+    "next_action": "Wait for the compatibility-fixtures worker report and commit, review and integrate its branch in the coordinator checkout, then reassess the remaining ready task scopes before assigning another worker.",
+    "note": "Coordinator committed checkpoint-freshness as 09983a5, claimed compatibility-fixtures for worker-compatibility-fixtures, and created /tmp/aiw-compatibility-fixtures on codex/compatibility-fixtures. durability-audit and integration-health remain queued because all three ready tasks overlap in tests, docs and core scope.",
+    "source_hash": "86345043ea5c083c7844fe4c0a25c646f5da6962fba24889f09edd11d98905f1"
   }
 }
