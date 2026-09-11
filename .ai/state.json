@@ -1530,17 +1530,17 @@
           "timeout_seconds": 600
         }
       ],
-      "worker": "worker-release-distribution",
+      "worker": "coordinator-integration",
       "blocker": null,
-      "result": "Released AIW 1.0.0 packaging support: approved Apache-2.0 metadata, documented Linux/macOS/Windows source installation and updates, deterministic exact-tag source archives with SHA-256 manifests and local rebuild verification, Windows personal-skill installer, and non-publishing platform CI. Four declared checks passed.",
+      "result": "AIW 1.0.0 now has an Apache-2.0 source-install release path, deterministic tagged source archive/checksum/manifest scripts, verification, Linux/macOS and Windows installers, and non-publishing CI artifact checks. The coordinator re-verified the combined checkout; external release publication remains a separate owner action.",
       "evidence": {
-        "source_hash": "25e241c8791e6d8c93160b96cf457b966786bab8a8b6db3b9212d3710f4d6f9d",
+        "source_hash": "837dc8f02e4b0103ef5fab03baddf65ac5c237e00582e91ae343c55764cb72b0",
         "contract_hash": "1e83452c7b7c73a51dafff489ce4f1bdc3db8a3ed678cf61ae29d1e8dc08fcf4",
         "success": true,
         "runs": [
           {
             "schema_version": 1,
-            "id": "run-pxAloL",
+            "id": "run-3882UL",
             "argv": [
               "cargo",
               "fmt",
@@ -1551,16 +1551,16 @@
             "exit_code": 0,
             "success": true,
             "timed_out": false,
-            "duration_ms": 120,
-            "stdout": ".ai/runtime/runs/run-pxAloL/stdout.log",
-            "stderr": ".ai/runtime/runs/run-pxAloL/stderr.log",
+            "duration_ms": 141,
+            "stdout": ".ai/runtime/runs/run-3882UL/stdout.log",
+            "stderr": ".ai/runtime/runs/run-3882UL/stderr.log",
             "diagnostics": [],
             "tail": [],
             "omitted": 0
           },
           {
             "schema_version": 1,
-            "id": "run-hZUIGb",
+            "id": "run-J4CzNh",
             "argv": [
               "cargo",
               "clippy",
@@ -1573,25 +1573,19 @@
             "exit_code": 0,
             "success": true,
             "timed_out": false,
-            "duration_ms": 2614,
-            "stdout": ".ai/runtime/runs/run-hZUIGb/stdout.log",
-            "stderr": ".ai/runtime/runs/run-hZUIGb/stderr.log",
+            "duration_ms": 865,
+            "stdout": ".ai/runtime/runs/run-J4CzNh/stdout.log",
+            "stderr": ".ai/runtime/runs/run-J4CzNh/stderr.log",
             "diagnostics": [],
             "tail": [
-              "Checking serde v1.0.229",
-              "Checking serde_json v1.0.151",
-              "Checking clap v4.6.6",
-              "Checking schemars v1.2.2",
-              "Checking globset v0.4.20",
-              "Checking ignore v0.4.33",
-              "Checking aiw v1.0.0 (/tmp/aiw-release-distribution)",
-              "Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.53s"
+              "Checking aiw v1.0.0 (/secondary/Programming/Github/AIW)",
+              "Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.80s"
             ],
             "omitted": 0
           },
           {
             "schema_version": 1,
-            "id": "run-OgBRHD",
+            "id": "run-fqX54v",
             "argv": [
               "cargo",
               "test",
@@ -1600,17 +1594,17 @@
             "exit_code": 0,
             "success": true,
             "timed_out": false,
-            "duration_ms": 1989,
-            "stdout": ".ai/runtime/runs/run-OgBRHD/stdout.log",
-            "stderr": ".ai/runtime/runs/run-OgBRHD/stderr.log",
+            "duration_ms": 3516,
+            "stdout": ".ai/runtime/runs/run-fqX54v/stdout.log",
+            "stderr": ".ai/runtime/runs/run-fqX54v/stderr.log",
             "diagnostics": [],
             "tail": [
-              "test malformed_json_is_diagnosed ... ok",
               "test aggregate_verification_and_long_command_display_stay_bounded ... ok",
               "test unix::timeout_and_source_mutating_verification_fail ... ok",
               "test doctor_reports_read_only_integration_health_for_both_adapters ... ok",
-              "test result: ok. 42 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.89s",
-              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.04s",
+              "test result: ok. 42 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.95s",
+              "Compiling aiw v1.0.0 (/secondary/Programming/Github/AIW)",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 1.51s",
               "Running unittests src/main.rs (target/debug/deps/aiw-48f647d5a5420b81)",
               "Running tests/cli.rs (target/debug/deps/cli-07e5c8b06b349bc1)"
             ],
@@ -1618,7 +1612,7 @@
           },
           {
             "schema_version": 1,
-            "id": "run-V4w0Yr",
+            "id": "run-w6orLz",
             "argv": [
               "cargo",
               "build",
@@ -1628,19 +1622,12 @@
             "exit_code": 0,
             "success": true,
             "timed_out": false,
-            "duration_ms": 10640,
-            "stdout": ".ai/runtime/runs/run-V4w0Yr/stdout.log",
-            "stderr": ".ai/runtime/runs/run-V4w0Yr/stderr.log",
+            "duration_ms": 60,
+            "stdout": ".ai/runtime/runs/run-w6orLz/stdout.log",
+            "stderr": ".ai/runtime/runs/run-w6orLz/stderr.log",
             "diagnostics": [],
             "tail": [
-              "Compiling clap_derive v4.6.4",
-              "Compiling schemars_derive v1.2.2",
-              "Compiling globset v0.4.20",
-              "Compiling ignore v0.4.33",
-              "Compiling clap v4.6.6",
-              "Compiling schemars v1.2.2",
-              "Compiling aiw v1.0.0 (/tmp/aiw-release-distribution)",
-              "Finished `release` profile [optimized] target(s) in 10.60s"
+              "Finished `release` profile [optimized] target(s) in 0.02s"
             ],
             "omitted": 0
           }
@@ -1821,8 +1808,8 @@
   "active_task": null,
   "checkpoint": {
     "task": "release-distribution",
-    "next_action": "Run the declared release-distribution verification, then transition the verified task to done and return commit 50d76e3 to the coordinator.",
-    "note": "A clean temporary checkout tagged v1.0.0 successfully created aiw-1.0.0-source.tar.gz, SHA256SUMS, and RELEASE.txt, verified the checksum, and rebuilt the extracted locked source as aiw 1.0.0.",
-    "source_hash": "b8c5914d7102f4b93c91de452941e09bcbf7717f98f9ed5ba3ee6d11ebd2380d"
+    "next_action": "Run aiw load to confirm the v1 plan has no remaining runnable tasks. External GitHub Release publication remains an owner-authorized action after selecting the exact v1.0.0 tag commit.",
+    "note": "Worker release-distribution commit 0dfcdc4 was integrated as 63b0580, followed by README correction 057a5da. Coordinator rebuilt AIW 1.0.0 and re-verified all declared checks in master. The local release path is complete; external publication was intentionally not performed.",
+    "source_hash": "b0e0df21d12d7ab5fee542431fe709e41321493ce0e14b8e838a89643a0e781e"
   }
 }
