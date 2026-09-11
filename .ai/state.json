@@ -1609,9 +1609,9 @@
   "active_plan": "v1",
   "active_task": "release-trials",
   "checkpoint": {
-    "task": "integration-health",
-    "next_action": "Run aiw load and list ready tasks; dispatch any newly unblocked release or trial task according to its declared scope and dependencies.",
-    "note": "Worker integration-health commit ddac3fa was integrated as f7eac71. Coordinator rebuilt the current release CLI, confirmed doctor health, and re-verified all declared checks in master before restoring done with fresh evidence.",
-    "source_hash": "f4072b41db263dc7feaf8a1ff5e94e2be35aa5a0674b1e3230ec0ce5e7f9db4a"
+    "task": "release-trials",
+    "next_action": "Wait for the release-trials worker commit, review and merge it directly into master, re-verify it in the combined checkout, then load any release-distribution work unblocked by trial evidence.",
+    "note": "Coordinator integrated and re-verified compatibility-fixtures, durability-audit and integration-health on master. release-trials is claimed by worker-release-trials in /tmp/aiw-release-trials on codex/release-trials. It must keep trial consumer repositories independent and record provider availability honestly.",
+    "source_hash": "c6109cd4e129a7303eed9ea16cc15ec6cdbe85ced9ace164fa25c2b50f8a8523"
   }
 }
