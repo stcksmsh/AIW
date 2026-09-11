@@ -1510,9 +1510,9 @@
   "active_plan": "v1",
   "active_task": "integration-health",
   "checkpoint": {
-    "task": "durability-audit",
-    "next_action": "Claim and dispatch integration-health in a separate worktree, then integrate and re-verify it in master.",
-    "note": "Worker durability-audit commit 1af9285 was integrated as d2f8b8a. Coordinator reopened only for combined-checkout verification; all declared checks passed and the task is done with fresh evidence.",
-    "source_hash": "eb6cdcbb4cdd25df12a9196451021e77f62d628ad9330d7717eed01719c8401b"
+    "task": "integration-health",
+    "next_action": "Wait for the integration-health worker commit, review and merge it directly into master, re-verify the combined checkout, then load the plan for newly unblocked release work.",
+    "note": "Coordinator integrated and re-verified compatibility-fixtures and durability-audit. integration-health is claimed by worker-integration-health in /tmp/aiw-integration-health on codex/integration-health; no other ready implementation task is safe to dispatch concurrently.",
+    "source_hash": "444b2a827bd8893c6eb0dae1f990d2b478fbbe6de2b2fd5667fdc155b7aa37ff"
   }
 }
