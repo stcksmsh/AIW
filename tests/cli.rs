@@ -941,6 +941,24 @@ mod unix {
         assert_eq!(r.state()["tasks"]["a"]["evidence"]["success"], false);
     }
     #[test]
+    fn interrupted_verification_leaves_no_passing_evidence() {
+        let r = Repo::new(false);
+        r.plan();
+        r.task("a", &[]);
+        r.ok(&["task", "claim", "a", "--worker", "test"]);
+        let mut state = r.state();
+        state["tasks"]["a"]["verify"] = json!([{
+            "argv":["sh", "-c", "printf 'started\\n'; kill -KILL \"$PPID\""],
+            "timeout_seconds":10
+        }]);
+        r.save(&state);
+
+        let out = r.call(&["verify", "a", "--allow-exec"]);
+        assert!(!out.status.success());
+        assert_eq!(state, r.state());
+        assert!(r.state()["tasks"]["a"]["evidence"].is_null());
+    }
+    #[test]
     fn structured_diagnostics_are_deduplicated_and_large_lines_bounded() {
         let r = Repo::new(false);
         let message=json!({"reason":"compiler-message","message":{"level":"error","message":"expected type","spans":[{"file_name":"src/lib.rs","line_start":3,"column_start":4,"is_primary":true}]}}).to_string();

@@ -161,6 +161,22 @@ Symlink components in AIW-managed paths are refused. Concurrent noncooperating
 editors and hostile filesystem races are outside the trust model. Back up through
 Git; no automatic commit, reset or merge occurs.
 
+Recovery starts by inspecting the working tree and a known-good Git revision, then
+restoring canonical files deliberately, for example `git restore --source=REV --
+.ai/state.json .ai/policy.md .ai/decisions/`. AIW never performs that restore for
+an agent. A missing `.ai/runtime/` directory, its logs, or its lock file is normal:
+the canonical receipt remains readable and reports raw artifacts as
+missing/disposable. Recreate the runtime directory by running an operation; rerun
+the declared verification before relying on fresh evidence. Do not infer a pass
+from partial artifacts left by an interrupted process.
+
+Same-directory replacement and filesystem sync improve recovery from ordinary
+process interruption, but they do not guarantee survival of power loss, broken or
+remote filesystems, filesystem bugs, or noncooperating writers. The local lock only
+coordinates cooperating AIW clients in one checkout. AIW is not a crash-recovery
+database or a security boundary; Git history and human review remain the recovery
+and trust mechanisms.
+
 A newer or older unsupported schema MUST fail closed without changing canonical
 state. v1 is the first format; no legacy migration exists. A future migration must
 validate source version, write a backup, explicitly transform and validate state,

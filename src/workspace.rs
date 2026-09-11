@@ -204,3 +204,22 @@ pub fn atomic_write(path: &Path, bytes: &[u8]) -> Result<()> {
     File::open(parent)?.sync_all()?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn atomic_write_replaces_a_complete_file() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("state.json");
+        fs::write(&path, b"{\"old\":true}\n").unwrap();
+
+        atomic_write(&path, b"{\"schema_version\":1}\n").unwrap();
+
+        let bytes = fs::read(&path).unwrap();
+        assert_eq!(bytes, b"{\"schema_version\":1}\n");
+        let value: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(value["schema_version"], 1);
+    }
+}

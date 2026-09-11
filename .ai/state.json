@@ -615,7 +615,7 @@
     "durability-audit": {
       "title": "Audit v1 durability and failure recovery guarantees",
       "plan": "v1",
-      "status": "in_progress",
+      "status": "done",
       "dependencies": [
         "release-charter"
       ],
@@ -678,8 +678,114 @@
       ],
       "worker": "worker-durability-audit",
       "blocker": null,
-      "result": null,
-      "evidence": null
+      "result": "Audited v1 durability: focused tests cover complete atomic replacement, lock contention and fail-closed malformed state, plus interrupted verification without evidence. Documentation gives deliberate Git recovery, disposable runtime handling, and bounded trust-model limits.",
+      "evidence": {
+        "source_hash": "c749032bfb04b3b1b7c994aac49d39a5bccdbd9352f4631c6bd7e6df468411ea",
+        "contract_hash": "e5089a96969013bf0d916bf38aa82510dd2f552bc7cbd0ee9c2be1a6eda8ae49",
+        "success": true,
+        "runs": [
+          {
+            "schema_version": 1,
+            "id": "run-lX3ovG",
+            "argv": [
+              "cargo",
+              "fmt",
+              "--all",
+              "--",
+              "--check"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 161,
+            "stdout": ".ai/runtime/runs/run-lX3ovG/stdout.log",
+            "stderr": ".ai/runtime/runs/run-lX3ovG/stderr.log",
+            "diagnostics": [],
+            "tail": [],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-RAHGsQ",
+            "argv": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "--all-targets",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 3597,
+            "stdout": ".ai/runtime/runs/run-RAHGsQ/stdout.log",
+            "stderr": ".ai/runtime/runs/run-RAHGsQ/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Checking serde v1.0.229",
+              "Checking clap v4.6.6",
+              "Checking tempfile v3.27.0",
+              "Checking schemars v1.2.2",
+              "Checking globset v0.4.20",
+              "Checking ignore v0.4.33",
+              "Checking aiw v0.2.0 (/tmp/aiw-durability-audit)",
+              "Finished `dev` profile [unoptimized + debuginfo] target(s) in 3.50s"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-hcSxaa",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 1306,
+            "stdout": ".ai/runtime/runs/run-hcSxaa/stdout.log",
+            "stderr": ".ai/runtime/runs/run-hcSxaa/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "test checkpoint_freshness_tracks_scoped_source_without_refreshing_evidence ... ok",
+              "test malformed_json_is_diagnosed ... ok",
+              "test aggregate_verification_and_long_command_display_stay_bounded ... ok",
+              "test unix::timeout_and_source_mutating_verification_fail ... ok",
+              "test result: ok. 40 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.18s",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.06s",
+              "Running unittests src/main.rs (target/debug/deps/aiw-3497df528764ce9d)",
+              "Running tests/cli.rs (target/debug/deps/cli-ed7a4b5f875b9bf9)"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-BKTC35",
+            "argv": [
+              "cargo",
+              "build",
+              "--release",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 7981,
+            "stdout": ".ai/runtime/runs/run-BKTC35/stdout.log",
+            "stderr": ".ai/runtime/runs/run-BKTC35/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Compiling aiw v0.2.0 (/tmp/aiw-durability-audit)",
+              "Finished `release` profile [optimized] target(s) in 7.93s"
+            ],
+            "omitted": 0
+          }
+        ]
+      }
     },
     "harden": {
       "title": "Adversarial review and hardening",
@@ -1408,11 +1514,11 @@
     }
   },
   "active_plan": "v1",
-  "active_task": "durability-audit",
+  "active_task": null,
   "checkpoint": {
     "task": "durability-audit",
-    "next_action": "Wait for the durability-audit worker report and commit, review and integrate it, re-verify it in the combined checkout, then dispatch integration-health.",
-    "note": "Coordinator integrated compatibility-fixtures as 87c1f96 and re-verified it in the combined checkout. durability-audit is claimed by worker-durability-audit in /tmp/aiw-durability-audit on codex/durability-audit; integration-health remains queued because its declared scope overlaps durability.",
-    "source_hash": "7fee3d9b9506ee47f32b9da5d0ac91225fea2f9c8d8505bed9a28aa0c5aee6b2"
+    "next_action": "Run the four declared verification commands, then transition durability-audit with the audited recovery limits.",
+    "note": "Focused regressions now cover complete atomic replacement and an externally interrupted verifier that leaves canonical evidence absent; recovery guidance names Git restoration and disposable runtime handling.",
+    "source_hash": "eb6cdcbb4cdd25df12a9196451021e77f62d628ad9330d7717eed01719c8401b"
   }
 }

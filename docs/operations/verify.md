@@ -18,4 +18,4 @@
 
 **Transitions.** Evidence becomes passed/failed/stale; task stays in_progress.
 
-**Idempotency / failure.** New runs each time. Empty contract, unmet dependencies or missing authorization fail before execution.
+**Idempotency / failure.** New runs each time. Empty contract, unmet dependencies or missing authorization fail before execution. An interrupted process can leave partial runtime files but cannot create passing evidence. Runtime files are disposable: if they are missing, read the canonical receipt, inspect Git for recovery when needed, and rerun the declared verification for fresh evidence.
