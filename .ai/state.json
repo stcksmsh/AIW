@@ -615,7 +615,7 @@
     "durability-audit": {
       "title": "Audit v1 durability and failure recovery guarantees",
       "plan": "v1",
-      "status": "pending",
+      "status": "in_progress",
       "dependencies": [
         "release-charter"
       ],
@@ -676,7 +676,7 @@
           "timeout_seconds": 600
         }
       ],
-      "worker": null,
+      "worker": "worker-durability-audit",
       "blocker": null,
       "result": null,
       "evidence": null
@@ -1408,7 +1408,7 @@
     }
   },
   "active_plan": "v1",
-  "active_task": null,
+  "active_task": "durability-audit",
   "checkpoint": {
     "task": "compatibility-fixtures",
     "next_action": "Claim and dispatch one of the remaining overlapping ready tasks in a separate worktree; retain the other pending until integration.",
