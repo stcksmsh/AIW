@@ -1058,7 +1058,7 @@
     "integration-health": {
       "title": "Diagnose installed adapter and hook health without provider calls",
       "plan": "v1",
-      "status": "pending",
+      "status": "in_progress",
       "dependencies": [
         "release-charter"
       ],
@@ -1122,7 +1122,7 @@
           "timeout_seconds": 600
         }
       ],
-      "worker": null,
+      "worker": "worker-integration-health",
       "blocker": null,
       "result": null,
       "evidence": null
@@ -1508,7 +1508,7 @@
     }
   },
   "active_plan": "v1",
-  "active_task": null,
+  "active_task": "integration-health",
   "checkpoint": {
     "task": "durability-audit",
     "next_action": "Claim and dispatch integration-health in a separate worktree, then integrate and re-verify it in master.",
