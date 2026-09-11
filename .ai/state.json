@@ -1122,9 +1122,9 @@
           "timeout_seconds": 600
         }
       ],
-      "worker": "worker-integration-health",
+      "worker": "coordinator-integration",
       "blocker": null,
-      "result": "Doctor now reports read-only Codex and Claude bootstrap, managed skill, and exact AIW lifecycle hook health; missing, malformed, stale, and co-installed configurations are covered by regression tests and all declared checks passed.",
+      "result": "Doctor now reports read-only Codex and Claude bootstrap, managed skill and exact AIW lifecycle-handler health, including missing, malformed, stale and co-installed configurations. The coordinator re-verified the combined checkout after integration.",
       "evidence": {
         "source_hash": "5639215f70c404be5307d21012b72dc5ad9cda90d9444659116a9e4e075a4d2a",
         "contract_hash": "5015512bf1ca7630ca356e5b67abd5c6ce75e574f62fb7d626152c8e50108676",
@@ -1132,7 +1132,7 @@
         "runs": [
           {
             "schema_version": 1,
-            "id": "run-uYTbmW",
+            "id": "run-4TBAQ5",
             "argv": [
               "cargo",
               "fmt",
@@ -1143,16 +1143,16 @@
             "exit_code": 0,
             "success": true,
             "timed_out": false,
-            "duration_ms": 164,
-            "stdout": ".ai/runtime/runs/run-uYTbmW/stdout.log",
-            "stderr": ".ai/runtime/runs/run-uYTbmW/stderr.log",
+            "duration_ms": 140,
+            "stdout": ".ai/runtime/runs/run-4TBAQ5/stdout.log",
+            "stderr": ".ai/runtime/runs/run-4TBAQ5/stderr.log",
             "diagnostics": [],
             "tail": [],
             "omitted": 0
           },
           {
             "schema_version": 1,
-            "id": "run-FZSzCy",
+            "id": "run-Wz4O2b",
             "argv": [
               "cargo",
               "clippy",
@@ -1165,25 +1165,19 @@
             "exit_code": 0,
             "success": true,
             "timed_out": false,
-            "duration_ms": 3040,
-            "stdout": ".ai/runtime/runs/run-FZSzCy/stdout.log",
-            "stderr": ".ai/runtime/runs/run-FZSzCy/stderr.log",
+            "duration_ms": 643,
+            "stdout": ".ai/runtime/runs/run-Wz4O2b/stdout.log",
+            "stderr": ".ai/runtime/runs/run-Wz4O2b/stderr.log",
             "diagnostics": [],
             "tail": [
-              "Checking clap v4.6.6",
-              "Checking serde v1.0.229",
-              "Checking serde_json v1.0.151",
-              "Checking schemars v1.2.2",
-              "Checking globset v0.4.20",
-              "Checking ignore v0.4.33",
-              "Checking aiw v0.2.0 (/tmp/aiw-integration-health)",
-              "Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.95s"
+              "Checking aiw v0.2.0 (/secondary/Programming/Github/AIW)",
+              "Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.56s"
             ],
             "omitted": 0
           },
           {
             "schema_version": 1,
-            "id": "run-ZiSgj7",
+            "id": "run-0XI6Wg",
             "argv": [
               "cargo",
               "test",
@@ -1192,17 +1186,17 @@
             "exit_code": 0,
             "success": true,
             "timed_out": false,
-            "duration_ms": 2833,
-            "stdout": ".ai/runtime/runs/run-ZiSgj7/stdout.log",
-            "stderr": ".ai/runtime/runs/run-ZiSgj7/stderr.log",
+            "duration_ms": 3302,
+            "stdout": ".ai/runtime/runs/run-0XI6Wg/stdout.log",
+            "stderr": ".ai/runtime/runs/run-0XI6Wg/stderr.log",
             "diagnostics": [],
             "tail": [
               "test aggregate_verification_and_long_command_display_stay_bounded ... ok",
               "test unix::timeout_and_source_mutating_verification_fail ... ok",
               "test doctor_reports_read_only_integration_health_for_both_adapters ... ok",
-              "test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.87s",
-              "Compiling aiw v0.2.0 (/tmp/aiw-integration-health)",
-              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.90s",
+              "test result: ok. 41 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.44s",
+              "Compiling aiw v0.2.0 (/secondary/Programming/Github/AIW)",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.80s",
               "Running unittests src/main.rs (target/debug/deps/aiw-3497df528764ce9d)",
               "Running tests/cli.rs (target/debug/deps/cli-ed7a4b5f875b9bf9)"
             ],
@@ -1210,7 +1204,7 @@
           },
           {
             "schema_version": 1,
-            "id": "run-HkLYWW",
+            "id": "run-AzvJ6M",
             "argv": [
               "cargo",
               "build",
@@ -1220,19 +1214,12 @@
             "exit_code": 0,
             "success": true,
             "timed_out": false,
-            "duration_ms": 11356,
-            "stdout": ".ai/runtime/runs/run-HkLYWW/stdout.log",
-            "stderr": ".ai/runtime/runs/run-HkLYWW/stderr.log",
+            "duration_ms": 80,
+            "stdout": ".ai/runtime/runs/run-AzvJ6M/stdout.log",
+            "stderr": ".ai/runtime/runs/run-AzvJ6M/stderr.log",
             "diagnostics": [],
             "tail": [
-              "Compiling clap_derive v4.6.4",
-              "Compiling schemars_derive v1.2.2",
-              "Compiling clap v4.6.6",
-              "Compiling globset v0.4.20",
-              "Compiling ignore v0.4.33",
-              "Compiling schemars v1.2.2",
-              "Compiling aiw v0.2.0 (/tmp/aiw-integration-health)",
-              "Finished `release` profile [optimized] target(s) in 11.31s"
+              "Finished `release` profile [optimized] target(s) in 0.03s"
             ],
             "omitted": 0
           }
@@ -1623,8 +1610,8 @@
   "active_task": null,
   "checkpoint": {
     "task": "integration-health",
-    "next_action": "Run the declared integration-health verification, transition the task to done, and commit the diagnostic implementation.",
-    "note": "Doctor now reports read-only Codex and Claude bootstrap, skill, and exact AIW hook health; targeted missing, malformed, stale, and co-installed regression coverage passes.",
+    "next_action": "Run aiw load and list ready tasks; dispatch any newly unblocked release or trial task according to its declared scope and dependencies.",
+    "note": "Worker integration-health commit ddac3fa was integrated as f7eac71. Coordinator rebuilt the current release CLI, confirmed doctor health, and re-verified all declared checks in master before restoring done with fresh evidence.",
     "source_hash": "f4072b41db263dc7feaf8a1ff5e94e2be35aa5a0674b1e3230ec0ce5e7f9db4a"
   }
 }
