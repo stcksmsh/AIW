@@ -353,6 +353,175 @@ fn recovery_remains_bounded_after_large_history() {
     r.err(&["load", "--budget", "128"], "budget");
 }
 #[test]
+fn checkpoint_freshness_tracks_scoped_source_without_refreshing_evidence() {
+    for git in [false, true] {
+        let r = Repo::new(git);
+        r.plan();
+        r.task("active", &[]);
+        r.write("src/lib.rs", "original\n");
+        r.write(".gitignore", "src/ignored/\n");
+        if git {
+            r.git(&["add", "."]);
+            r.git(&["commit", "-qm", "fixture"]);
+        }
+        r.ok(&["task", "claim", "active", "--worker", "fixture"]);
+        assert_eq!(r.json(&["status"])["checkpoint_freshness"], "missing");
+        r.ok(&["verify", "active", "--allow-exec"]);
+        let evidence = r.state()["tasks"]["active"]["evidence"].clone();
+        let checkpoint = [
+            "checkpoint",
+            "--next",
+            "Review scoped source",
+            "--note",
+            "Baseline",
+        ];
+        r.ok(&checkpoint);
+        let baseline = r.state()["checkpoint"].clone();
+        assert_eq!(baseline["source_hash"].as_str().unwrap().len(), 64);
+        r.ok(&checkpoint);
+        assert_eq!(r.state()["checkpoint"], baseline);
+        assert_eq!(r.json(&["status"])["checkpoint_freshness"], "unchanged");
+        assert!(r.ok(&["load"]).contains("Checkpoint source: unchanged"));
+
+        // These writes must not count as scoped source changes.
+        for path in [
+            "src/ignored/cache",
+            "src/target/cache",
+            ".ai/runtime/cache",
+            ".ai/derived/cache",
+            "src-other/lib.rs",
+        ] {
+            r.write(path, "ignored by checkpoint comparison\n");
+        }
+        assert_eq!(r.json(&["status"])["checkpoint_freshness"], "unchanged");
+        // Verification still covers discovered files outside task scope.
+        assert_eq!(r.json(&["status"])["verification"], "stale");
+
+        r.write("src/lib.rs", "changed\n");
+        let before_read = r.state();
+        assert_eq!(r.json(&["status"])["checkpoint_freshness"], "changed");
+        assert!(
+            r.ok(&["load", "--budget", "2048"])
+                .contains("Checkpoint source: changed")
+        );
+        let stop = r.call_stdin(&["hook", "stop", "--strict"], &json!({}));
+        assert_eq!(stop.status.code(), Some(2));
+        assert!(String::from_utf8_lossy(&stop.stderr).contains("persist a checkpoint"));
+        assert!(
+            r.call_stdin(
+                &["hook", "stop", "--strict"],
+                &json!({"stop_hook_active":true})
+            )
+            .status
+            .success()
+        );
+        assert!(r.call_stdin(&["hook", "stop"], &json!({})).status.success());
+        assert_eq!(r.state(), before_read);
+
+        r.write("src/lib.rs", "original\n");
+        assert_eq!(r.json(&["status"])["checkpoint_freshness"], "unchanged");
+        fs::remove_file(r.path().join("src/lib.rs")).unwrap();
+        assert_eq!(r.json(&["status"])["checkpoint_freshness"], "changed");
+        r.write("src/lib.rs", "original\n");
+        r.write("src/new.rs", "added\n");
+        assert_eq!(r.json(&["status"])["checkpoint_freshness"], "changed");
+        fs::remove_file(r.path().join("src/new.rs")).unwrap();
+        assert_eq!(r.json(&["status"])["checkpoint_freshness"], "unchanged");
+
+        r.write("src/lib.rs", "changed again\n");
+        r.ok(&checkpoint);
+        assert_ne!(
+            r.state()["checkpoint"]["source_hash"],
+            baseline["source_hash"]
+        );
+        assert_eq!(r.json(&["status"])["checkpoint_freshness"], "unchanged");
+        assert_eq!(r.state()["tasks"]["active"]["evidence"], evidence);
+        r.err(
+            &[
+                "task",
+                "transition",
+                "active",
+                "done",
+                "--result",
+                "Checkpoint is not evidence",
+            ],
+            "fresh successful verification",
+        );
+    }
+}
+#[test]
+fn checkpoint_freshness_handles_legacy_explicit_and_taskless_checkpoints() {
+    let r = Repo::new(false);
+    assert!(r.json(&["status"])["checkpoint_freshness"].is_null());
+    r.ok(&["checkpoint", "--next", "Select a task"]);
+    assert!(r.state()["checkpoint"]["source_hash"].is_null());
+    r.plan();
+    r.task("active", &[]);
+    r.task("other", &[]);
+    r.ok(&["task", "focus", "active"]);
+    r.ok(&["checkpoint", "--task", "other", "--next", "Inspect other"]);
+    assert_eq!(r.state()["checkpoint"]["task"], "other");
+    assert_eq!(r.json(&["status"])["checkpoint_freshness"], "missing");
+    assert!(
+        r.ok(&["load", "--task", "other"])
+            .contains("Checkpoint source: unchanged")
+    );
+    let before = r.state();
+    r.err(
+        &["checkpoint", "--task", "absent", "--next", "Inspect"],
+        "missing task",
+    );
+    r.err(&["checkpoint", "--next", ""], "next action");
+    assert_eq!(r.state(), before);
+
+    let mut legacy = r.state();
+    legacy["checkpoint"] =
+        json!({"task":"active", "next_action":"Inspect source", "note":"Old client"});
+    r.save(&legacy);
+    assert_eq!(r.json(&["status"])["checkpoint_freshness"], "unknown");
+    assert!(r.ok(&["load"]).contains("Checkpoint source: unknown"));
+    r.ok(&["task", "claim", "active", "--worker", "fixture"]);
+    assert!(r.state()["checkpoint"]["source_hash"].is_null());
+    for invalid in [json!("bad hash"), json!("z".repeat(64))] {
+        let mut state = legacy.clone();
+        state["checkpoint"]["source_hash"] = invalid;
+        r.save(&state);
+        r.err(&["status"], "invalid checkpoint fingerprint");
+    }
+    let mut taskless = legacy.clone();
+    taskless["checkpoint"]["task"] = Value::Null;
+    taskless["checkpoint"]["source_hash"] = json!("a".repeat(64));
+    r.save(&taskless);
+    r.err(&["status"], "checkpoint fingerprint requires a task");
+    r.save(&legacy);
+    r.ok(&["checkpoint", "--next", "Capture baseline"]);
+    assert_eq!(r.json(&["status"])["checkpoint_freshness"], "unchanged");
+}
+#[test]
+fn checkpoint_freshness_matches_file_boundaries_and_empty_scope() {
+    let r = Repo::new(false);
+    r.plan();
+    r.task("active", &[]);
+    r.ok(&["task", "focus", "active"]);
+    r.write("src/lib.rs", "original");
+    let mut state = r.state();
+    state["tasks"]["active"]["scope"] = json!(["src/lib.rs"]);
+    r.save(&state);
+    r.ok(&["checkpoint", "--next", "Inspect single file"]);
+    r.write("src/lib.rs.extra", "outside exact file scope");
+    r.write("src/other.rs", "outside exact file scope");
+    assert_eq!(r.json(&["status"])["checkpoint_freshness"], "unchanged");
+    r.write("src/lib.rs", "modified");
+    assert_eq!(r.json(&["status"])["checkpoint_freshness"], "changed");
+
+    let mut state = r.state();
+    state["tasks"]["active"]["scope"] = json!([]);
+    r.save(&state);
+    r.ok(&["checkpoint", "--next", "Inspect workspace source"]);
+    r.write("docs/new.md", "included with empty scope");
+    assert_eq!(r.json(&["status"])["checkpoint_freshness"], "changed");
+}
+#[test]
 fn provider_handoff_uses_only_canonical_state() {
     let r = Repo::new(true);
     r.plan();

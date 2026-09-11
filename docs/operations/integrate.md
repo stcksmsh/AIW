@@ -23,6 +23,10 @@ an AIW workspace and otherwise emits nothing. Strict Stop runs
 `aiw hook stop --strict`. It exits 2 once while the active task is pending or in
 progress. The repeated-hook flag, blocked tasks, terminal tasks, and repositories
 without AIW exit successfully.
+If scoped source differs from the active task's checkpoint, the strict-stop
+message also directs the agent to persist a checkpoint with a confirmed fact and
+exact next action. It never creates checkpoints or refreshes verification, and
+does not change the repeated-hook, blocked or terminal exemptions.
 
 **LLM-required work.** Reconcile a changed user request with the task contract,
 implement acceptance, diagnose verification, and persist an honest result or

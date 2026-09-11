@@ -64,6 +64,12 @@
         "note": {
           "type": "string"
         },
+        "source_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "task": {
           "type": [
             "string",

@@ -1,4 +1,7 @@
-use crate::model::State;
+use crate::{
+    model::{State, Task},
+    repo,
+};
 use anyhow::{Context, Result, bail, ensure};
 use serde::{Serialize, de::DeserializeOwned};
 use std::{
@@ -30,6 +33,36 @@ pub struct Workspace {
     pub root: PathBuf,
 }
 impl Workspace {
+    pub fn checkpoint_freshness(&self, state: &State, id: &str) -> Result<&'static str> {
+        let Some(checkpoint) = state
+            .checkpoint
+            .as_ref()
+            .filter(|c| c.task.as_deref() == Some(id))
+        else {
+            return Ok("missing");
+        };
+        let Some(source_hash) = &checkpoint.source_hash else {
+            return Ok("unknown");
+        };
+        Ok(
+            if *source_hash == self.checkpoint_source(&state.tasks[id])? {
+                "unchanged"
+            } else {
+                "changed"
+            },
+        )
+    }
+    pub fn checkpoint_source(&self, task: &Task) -> Result<String> {
+        let mut source = repo::snapshot(&self.root)?;
+        if !task.scope.is_empty() {
+            source.retain(|path, _| {
+                task.scope
+                    .iter()
+                    .any(|scope| Path::new(path).starts_with(Path::new(scope)))
+            });
+        }
+        Ok(repo::hash(&serde_json::to_vec(&source)?))
+    }
     pub fn discover(start: &Path) -> Result<Self> {
         let start = start.canonicalize().context("resolve working directory")?;
         for dir in start.ancestors() {

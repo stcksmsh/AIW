@@ -38,6 +38,9 @@ A test compares the generated schema with the published file.
 - `active_plan` / `active_task`: explicit intent. An active task MUST be nonterminal
   and belong to the active plan. Multiple in-progress tasks may exist.
 - `checkpoint`: latest task ID (nullable), next action, and a short factual note.
+  Optional `source_hash` records the selected task's scoped source fingerprint at
+  the explicit checkpoint operation. Older checkpoints without it remain valid;
+  their source freshness is unknown. A taskless checkpoint has no fingerprint.
   Git retains history. A checkpoint MUST NOT be a copy of a diff or log.
 
 Claims record an opaque worker string. Provider/model identity has no semantic
@@ -102,6 +105,19 @@ map. Non-Git mode uses an ignore-aware filesystem walk. Excluded: `.ai/state.jso
 `.ai/runtime/`, `.ai/derived/`, `.git`, target, node_modules, .venv and __pycache__.
 Other policy/decision files are covered when included in discovery.
 
+Checkpoint source hashes use the same sorted map and file hashing rules, filtered
+to the task's current scope: each path matches itself and descendants at a `/`
+boundary. Empty scope includes all discovered source. `load` and `status` compare
+the selected task's matching checkpoint with its current scoped source and report
+`unchanged` or `changed`. No matching checkpoint reports `missing`; a matching
+checkpoint without a hash reports `unknown`. Status reports null when no task is
+selected. Restoring source to the checkpoint contents reports `unchanged` again.
+Ignored and excluded paths do not affect this comparison. This detects source
+differences, not semantic progress, and MUST NOT create checkpoints automatically.
+Only an explicit checkpoint replaces the baseline, even when its text is unchanged.
+Checkpoint capture MUST NOT refresh, clear or otherwise alter verification
+evidence; verification continues to cover the entire discovered source map.
+
 The contract hash covers compact JSON of the ordered tuple: task title, plan ID,
 plan object, dependency IDs, scope, acceptance, constraints, verify commands,
 project invariants. Worker, status, result and checkpoint are excluded. Other
@@ -149,6 +165,9 @@ Skills, vendor instruction files, and lifecycle hooks are noncanonical adapters.
 They MAY inject `load` output at session start. A strict stop hook MAY request one
 additional agent turn while the active task is pending or in progress, but MUST
 allow a repeated stop attempt and MUST allow persisted blocked or terminal state.
+When scoped source differs from the active task's checkpoint, the reference strict
+stop output directs the agent to persist a checkpoint with a confirmed fact and
+exact next action. This retains the same one-repeat guard and lifecycle rules.
 This guard enforces state persistence, not semantic correctness. Only the task
 state machine and fresh verification evidence permit a transition to done.
 

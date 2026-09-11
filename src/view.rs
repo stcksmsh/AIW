@@ -55,8 +55,11 @@ pub fn status(ws: &Workspace, state: &State) -> Result<Value> {
     let verification = selected
         .map(|id| runner::health(state, &state.tasks[id], &source))
         .transpose()?;
+    let checkpoint_freshness = selected
+        .map(|id| ws.checkpoint_freshness(state, id))
+        .transpose()?;
     Ok(
-        json!({"schema_version":1,"project":clip(&state.project.name,160),"active_plan":state.active_plan,"active_task":state.active_task,"selected_task":selected,"tasks":counts,"verification":verification,"git_head":repo::git(&ws.root,&["rev-parse","--short","HEAD"]),"git_status":clip(&repo::git(&ws.root,&["status","--short","--untracked-files=normal"]).unwrap_or_default(),1500)}),
+        json!({"schema_version":1,"project":clip(&state.project.name,160),"active_plan":state.active_plan,"active_task":state.active_task,"selected_task":selected,"tasks":counts,"verification":verification,"checkpoint_freshness":checkpoint_freshness,"git_head":repo::git(&ws.root,&["rev-parse","--short","HEAD"]),"git_status":clip(&repo::git(&ws.root,&["status","--short","--untracked-files=normal"]).unwrap_or_default(),1500)}),
     )
 }
 pub fn load(ws: &Workspace, state: &State, task_id: Option<&str>, budget: usize) -> Result<String> {
@@ -89,6 +92,12 @@ pub fn load(ws: &Workspace, state: &State, task_id: Option<&str>, budget: usize)
             "Verification: {health}; {} declared command(s). Details: aiw show task {id}",
             t.verify.len()
         ));
+        let freshness = ws.checkpoint_freshness(state, id)?;
+        lines.push(format!("Checkpoint source: {freshness}{}", if freshness == "changed" {
+            "; scoped source differs from the latest checkpoint; persist a checkpoint with a confirmed fact and exact next action."
+        } else {
+            ""
+        }));
         let next = state
             .checkpoint
             .as_ref()

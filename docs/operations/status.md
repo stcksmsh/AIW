@@ -5,6 +5,9 @@
 **Inputs.** Working directory.
 
 **Outputs.** JSON counts, selected task, freshness and capped Git status.
+`checkpoint_freshness` is `unchanged`, `changed`, `missing` (no checkpoint for the
+selected task), `unknown` (legacy checkpoint without a hash), or null (no selected
+task). It is independent of `verification` health.
 
 **State read.** Canonical state and current repository fingerprint.
 

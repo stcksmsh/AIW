@@ -465,10 +465,21 @@ fn dispatch(cli: Cli) -> Result<()> {
             }
             Op::Checkpoint { next, note, task } => {
                 let task = task.or_else(|| state.active_task.clone());
+                let source_hash = task
+                    .as_ref()
+                    .map(|id| {
+                        let selected = state
+                            .tasks
+                            .get(id)
+                            .context("checkpoint references missing task")?;
+                        ws.checkpoint_source(selected)
+                    })
+                    .transpose()?;
                 state.checkpoint = Some(model::Checkpoint {
                     task,
                     next_action: next,
                     note,
+                    source_hash,
                 });
                 ws.save(&state)?;
                 print(&json!({"saved":true,"recovery":"aiw load"}))?;

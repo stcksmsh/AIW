@@ -108,6 +108,8 @@ pub struct Checkpoint {
     pub task: Option<String>,
     pub next_action: String,
     pub note: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_hash: Option<String>,
 }
 
 pub fn valid_id(id: &str) -> Result<()> {
@@ -293,6 +295,13 @@ impl State {
         if let Some(c) = &self.checkpoint {
             bounded(&c.next_action, "next action")?;
             ensure!(c.note.len() <= 4096, "checkpoint note exceeds 4096 bytes");
+            if let Some(hash) = &c.source_hash {
+                ensure!(c.task.is_some(), "checkpoint fingerprint requires a task");
+                ensure!(
+                    hash.len() == 64 && hash.bytes().all(|b| b.is_ascii_hexdigit()),
+                    "invalid checkpoint fingerprint"
+                );
+            }
             if let Some(id) = &c.task {
                 ensure!(
                     self.tasks.contains_key(id),

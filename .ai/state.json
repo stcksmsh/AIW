@@ -207,7 +207,7 @@
     "checkpoint-freshness": {
       "title": "Report source changes since an active-task checkpoint",
       "plan": "v1",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "release-charter"
       ],
@@ -218,7 +218,9 @@
         "src/hook.rs",
         "tests/cli.rs",
         "docs/specification.md",
-        "docs/operations"
+        "docs/operations",
+        "src/main.rs",
+        "schemas/workspace-v1.schema.json"
       ],
       "acceptance": [
         "A checkpoint records a deterministic source fingerprint for its selected task without changing verification evidence semantics",
@@ -271,10 +273,110 @@
           "timeout_seconds": 600
         }
       ],
-      "worker": null,
+      "worker": "codex-checkpoint-freshness",
       "blocker": null,
-      "result": null,
-      "evidence": null
+      "result": "Checkpoints now persist deterministic scoped source_hash baselines. Load/status distinguish changed, unchanged, missing and legacy unknown baselines; strict stop prompts an explicit checkpoint for changed source and retains its repeat/blocked/terminal exemptions. Git and non-Git regressions cover edits, additions, deletions, restoration, ignored paths, scope boundaries, task selection, legacy validation and unchanged verification evidence. All four declared verification commands passed.",
+      "evidence": {
+        "source_hash": "44af53d7d7502fc5bd37899600730c3a6b30b87126bcd8f8cbf29943b126ca2e",
+        "contract_hash": "a62b89b0445200ce1ae8f63ebc80c11ba57d8ad2fdceb2208d8c5af274392d35",
+        "success": true,
+        "runs": [
+          {
+            "schema_version": 1,
+            "id": "run-6uF4PB",
+            "argv": [
+              "cargo",
+              "fmt",
+              "--all",
+              "--",
+              "--check"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 120,
+            "stdout": ".ai/runtime/runs/run-6uF4PB/stdout.log",
+            "stderr": ".ai/runtime/runs/run-6uF4PB/stderr.log",
+            "diagnostics": [],
+            "tail": [],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-pKPSEM",
+            "argv": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "--all-targets",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 783,
+            "stdout": ".ai/runtime/runs/run-pKPSEM/stdout.log",
+            "stderr": ".ai/runtime/runs/run-pKPSEM/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Checking aiw v0.2.0 (/secondary/Programming/Github/AIW)",
+              "Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.70s"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-5aLr00",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 1266,
+            "stdout": ".ai/runtime/runs/run-5aLr00/stdout.log",
+            "stderr": ".ai/runtime/runs/run-5aLr00/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "test checkpoint_freshness_tracks_scoped_source_without_refreshing_evidence ... ok",
+              "test malformed_json_is_diagnosed ... ok",
+              "test aggregate_verification_and_long_command_display_stay_bounded ... ok",
+              "test unix::timeout_and_source_mutating_verification_fail ... ok",
+              "test result: ok. 37 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.15s",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s",
+              "Running unittests src/main.rs (target/debug/deps/aiw-3497df528764ce9d)",
+              "Running tests/cli.rs (target/debug/deps/cli-ed7a4b5f875b9bf9)"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-tjwdWd",
+            "argv": [
+              "cargo",
+              "build",
+              "--release",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 6328,
+            "stdout": ".ai/runtime/runs/run-tjwdWd/stdout.log",
+            "stderr": ".ai/runtime/runs/run-tjwdWd/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Compiling aiw v0.2.0 (/secondary/Programming/Github/AIW)",
+              "Finished `release` profile [optimized] target(s) in 6.28s"
+            ],
+            "omitted": 0
+          }
+        ]
+      }
     },
     "compatibility-fixtures": {
       "title": "Freeze and test the v1 workspace interoperability contract",
@@ -1209,8 +1311,9 @@
   "active_plan": "v1",
   "active_task": null,
   "checkpoint": {
-    "task": "release-charter",
-    "next_action": "Claim checkpoint-freshness and design a deterministic checkpoint source fingerprint with advisory lifecycle reporting",
-    "note": "Owner approved Apache-2.0, GitHub Releases with SHA-256 checksums, crates.io disabled, and Linux/macOS/Windows CLI support with Codex and Claude adapters"
+    "task": "checkpoint-freshness",
+    "next_action": "Run /secondary/Programming/Github/AIW/target/release/aiw load to select the next v1 task; use the rebuilt client for checkpoints containing source_hash.",
+    "note": "Implemented scoped checkpoint source fingerprints, load/status freshness and strict-stop checkpoint guidance while preserving verification evidence and the one-repeat guard. All four declared checks passed: fmt, Clippy with warnings denied, full tests and release build. Scope expansion for main.rs and the published schema was approved by the user.",
+    "source_hash": "8d2ef224ed63977b243c8add1b944f907b577b94e563221c02616f8f413189a5"
   }
 }

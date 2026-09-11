@@ -5,6 +5,9 @@
 **Inputs.** Optional task ID; 2048–32768 byte budget (8192 default).
 
 **Outputs.** Bounded text with next action, contracts, health, Git and drill-down commands.
+`Checkpoint source` reports scoped source as unchanged, changed, missing or
+unknown for the selected task. Changed source prompts an explicit checkpoint
+with a confirmed fact and exact next action; it does not imply semantic progress.
 
 **State read.** Validated canonical state and current source/Git facts.
 

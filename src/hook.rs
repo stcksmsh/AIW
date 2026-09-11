@@ -85,10 +85,15 @@ pub fn stop(strict: bool) -> Result<Outcome> {
     } else {
         "unverified"
     };
+    let checkpoint = if ws.checkpoint_freshness(&state, id)? == "changed" {
+        " Scoped source differs from the latest checkpoint; persist a checkpoint with a confirmed fact and exact next action using `aiw checkpoint`."
+    } else {
+        ""
+    };
     Ok(Outcome {
         context: None,
         block: Some(format!(
-            "AIW strict guard: active task {id} is {} with verification {health}. \
+            "AIW strict guard: active task {id} is {} with verification {health}.{checkpoint} \
              Continue the declared task, or persist an honest blocker and checkpoint before stopping. \
              If acceptance is satisfied, run `aiw verify {id} --allow-exec` and transition it to done with a concrete result.",
             task.status.label()
