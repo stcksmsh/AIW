@@ -20,3 +20,14 @@ jobs:
       - run: cargo clippy --locked --all-targets -- -D warnings
       - run: cargo test --locked
       - run: cargo build --release --locked
+      - if: runner.os != 'Windows'
+        run: bash -n scripts/install-user.sh scripts/package-release.sh scripts/verify-release.sh
+      - if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path scripts/install-user.ps1), [ref]$tokens, [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -ne 0) { throw ($errors | Out-String) }

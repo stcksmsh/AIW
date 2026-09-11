@@ -1,6 +1,6 @@
 [package]
 name = "aiw"
-version = "0.2.0"
+version = "1.0.0"
 edition = "2024"
 rust-version = "1.93"
 description = "Vendor-neutral persistent workspaces for disposable coding agents"

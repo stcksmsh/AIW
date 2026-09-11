@@ -4,7 +4,9 @@ set -euo pipefail
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 skill_source="$repo_root/integrations/aiw-agent/skills/aiw-workspace"
 
-cargo install --path "$repo_root" --locked
+# --force makes this command an explicit update path for a newer checked-out or
+# verified source release. Cargo's lockfile pins the dependency resolution.
+cargo install --path "$repo_root" --locked --force
 
 for skill_root in "$HOME/.agents/skills" "$HOME/.claude/skills"; do
   destination="$skill_root/aiw-workspace"

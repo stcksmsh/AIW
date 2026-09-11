@@ -8,8 +8,7 @@ intent and task contracts in Git-friendly files, recovers a small context packet
 and runs verification without dumping build logs into the conversation.
 
 No model, account, server, database, or network connection is required at runtime.
-This is a working v0.2 reference implementation on the path to a stable v1
-release, not an agent orchestration service.
+AIW 1.0.0 is the stable v1 release, not an agent orchestration service.
 
 ## V1 release contract
 
@@ -18,12 +17,11 @@ platforms will be Linux, macOS, and Windows. Codex and Claude are the supported
 adapter targets; their skills and hooks remain noncanonical pointers to the same
 vendor-neutral workspace state.
 
-The v1 release channel will be GitHub Releases. Each release will provide a
-versioned source/artifact path with SHA-256 checksums and documented installation
-and update instructions: download the matching release, verify its checksum,
-replace the installed binary, and rerun the personal-skill installer. Crates.io
-publication remains disabled. Until those artifacts exist, install from this
-source checkout as described below.
+The v1 release channel is GitHub Releases. Each release supplies a versioned
+source archive, its SHA-256 checksum, and the exact tag commit. Verify those
+before installation, then rebuild with the locked dependency graph. See
+[release installation and verification](docs/release.md). Crates.io publication
+remains disabled.
 
 AIW is licensed under [Apache-2.0](LICENSE). The stable interoperability promise
 is the version-1 workspace schema and its documented semantics. Human-oriented
@@ -34,12 +32,20 @@ V1 does not add model calls, accounts, servers, embeddings, semantic memory,
 automatic worker orchestration, automatic Git mutation, or dependencies on any
 consumer project.
 
-## Install
+## Install from a verified release
+
+Download `aiw-VERSION-source.tar.gz`, `SHA256SUMS`, and `RELEASE.txt` from the
+matching GitHub Release. Verify the source archive before extracting it, then use
+the platform installer in the extracted directory. The full commands, supported
+platform matrix, update path, and agent-skill verification are in
+[docs/release.md](docs/release.md).
+
+## Install from a source checkout
 
 Requires Rust 1.93 or newer. Git is strongly recommended; plain directories work.
 
 Install the CLI and personal `aiw-workspace` skill for Codex and Claude Code from
-an AIW checkout:
+an AIW checkout on Linux or macOS:
 
 ```sh
 ./scripts/install-user.sh
@@ -48,8 +54,9 @@ aiw doctor
 ```
 
 The script keeps the binary in Cargo's user install directory (normally
-`~/.cargo/bin`) and skills in `~/.agents/skills` and `~/.claude/skills`. For a
-CLI-only install, use `cargo install --path . --locked`.
+`~/.cargo/bin`) and skills in `~/.agents/skills` and `~/.claude/skills`. On
+Windows, run `powershell -ExecutionPolicy Bypass -File .\scripts\install-user.ps1`.
+For a CLI-only install, use `cargo install --path . --locked --force`.
 
 For development, use `cargo run -- <arguments>` or `target/debug/aiw` after
 `cargo build`. The crate is not published to crates.io; the v1 release task will
@@ -177,7 +184,7 @@ service. See [worker workflow](docs/operations/task.md).
 - [Example workspace](examples/minimal-state.json)
 - [Changelog](CHANGELOG.md)
 
-v0.2 deliberately omits semantic symbol resolution, embeddings, MCP/LSP services,
+v1 deliberately omits semantic symbol resolution, embeddings, MCP/LSP services,
 automatic worker launching/merging, releases, and provider billing integrations.
 The next milestone is measured structural Rust retrieval and a broader workspace
 corpus, driven by recovery quality and bytes saved rather than abstraction count.

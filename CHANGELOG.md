@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0 — 2026-09-11
+
+Stabilizes the version-1 workspace schema and documented local-first semantics.
+Adds reproducible, checksummed source-release packaging from an exact `vVERSION`
+tag, release verification, a Windows personal-skill installer, and CI coverage for
+Linux, macOS, and Windows. Distribution uses GitHub Releases; crates.io remains
+disabled.
+
 ## 0.2.0 — 2026-09-10
 
 Adds portable Codex and Claude project skills, merged SessionStart/SubagentStart

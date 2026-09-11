@@ -1,0 +1,21 @@
+name: Release source
+on:
+  push:
+    tags:
+      - 'v*'
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@1.93.0
+      - run: scripts/package-release.sh --tag "${GITHUB_REF_NAME}" --output-dir release
+      - run: scripts/verify-release.sh --tag "${GITHUB_REF_NAME}" --directory release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aiw-source-${{ github.ref_name }}
+          path: release/

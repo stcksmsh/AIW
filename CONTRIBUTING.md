@@ -22,4 +22,14 @@ contracts and failure recovery over tests mirroring private functions.
 
 AIW is licensed under Apache-2.0. `publish = false` prevents accidental crates.io
 publication; the approved v1 distribution channel is GitHub Releases with
-checksummed artifacts. CI builds and tests but does not publish or release.
+checksummed source releases. CI builds and tests but does not publish or create a
+release. Before an authorized release, create an exact `vVERSION` tag on a clean
+commit, then run:
+
+```sh
+scripts/package-release.sh --tag vVERSION --output-dir release
+scripts/verify-release.sh --tag vVERSION --directory release
+```
+
+The source archive, `SHA256SUMS`, and `RELEASE.txt` are the release assets. Attach
+them only after the commands succeed; publication remains an owner action.
