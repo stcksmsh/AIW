@@ -1465,7 +1465,7 @@
     "release-distribution": {
       "title": "Package and publish the approved AIW v1 release",
       "plan": "v1",
-      "status": "pending",
+      "status": "in_progress",
       "dependencies": [
         "release-trials"
       ],
@@ -1530,7 +1530,7 @@
           "timeout_seconds": 600
         }
       ],
-      "worker": null,
+      "worker": "worker-release-distribution",
       "blocker": null,
       "result": null,
       "evidence": null
@@ -1706,7 +1706,7 @@
     }
   },
   "active_plan": "v1",
-  "active_task": null,
+  "active_task": "release-distribution",
   "checkpoint": {
     "task": "release-trials",
     "next_action": "Inspect the newly unblocked release-distribution task, then decide whether its requested publication target is locally executable or needs user-provided release credentials/target direction.",
