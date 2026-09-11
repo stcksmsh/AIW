@@ -94,6 +94,7 @@ scripts/verify-release.sh --tag vVERSION --directory release
 ```
 
 The commands produce and verify `aiw-VERSION-source.tar.gz`, `SHA256SUMS`, and
-`RELEASE.txt`. Tag pushes run the same package-and-verify path in CI and retain
-the three files as a workflow artifact. They do not publish a GitHub Release;
-uploading the verified files is a separate authorized owner action.
+`RELEASE.txt`. Tag pushes run the same package-and-verify path in CI, retain the
+three files as a workflow artifact, and publish them to the matching GitHub
+Release. Publishing is performed only after the same workflow has verified the
+archive and locked rebuild.

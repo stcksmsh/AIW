@@ -1387,6 +1387,166 @@
         ]
       }
     },
+    "publish-release-assets": {
+      "title": "Publish verified source artifacts to the GitHub Release",
+      "plan": "v1",
+      "status": "done",
+      "dependencies": [],
+      "scope": [
+        ".github/workflows/release-source.yml",
+        "docs/release.md"
+      ],
+      "acceptance": [
+        "The tag workflow creates or updates the matching GitHub Release and attaches the verified source archive, checksum manifest and release metadata",
+        "The v1.0.0 release exposes the same files verified by the source-release workflow"
+      ],
+      "constraints": [
+        "Publish only the verified source artifacts from the tagged workflow; do not add a runtime network dependency"
+      ],
+      "verify": [
+        {
+          "argv": [
+            "cargo",
+            "fmt",
+            "--all",
+            "--",
+            "--check"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "--all-targets",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "build",
+            "--release",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        }
+      ],
+      "worker": "coordinator-release-publish",
+      "blocker": null,
+      "result": "The tag workflow now creates or updates the matching GitHub Release after package verification and uploads the deterministic source archive, SHA256SUMS and RELEASE.txt. All declared checks passed locally.",
+      "evidence": {
+        "source_hash": "04ee08933fa4a208b1f5bd0003d3b2ddb9be46d44fd91b2060ff6514a94d57cd",
+        "contract_hash": "e29c48ec6c02a21a13a04895c4e57c5e43cae723a5f04ccc03b1fc4da62772e7",
+        "success": true,
+        "runs": [
+          {
+            "schema_version": 1,
+            "id": "run-9DfeHl",
+            "argv": [
+              "cargo",
+              "fmt",
+              "--all",
+              "--",
+              "--check"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 120,
+            "stdout": ".ai/runtime/runs/run-9DfeHl/stdout.log",
+            "stderr": ".ai/runtime/runs/run-9DfeHl/stderr.log",
+            "diagnostics": [],
+            "tail": [],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-tM89Sc",
+            "argv": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "--all-targets",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 141,
+            "stdout": ".ai/runtime/runs/run-tM89Sc/stdout.log",
+            "stderr": ".ai/runtime/runs/run-tM89Sc/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.06s"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-epOwvD",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 2148,
+            "stdout": ".ai/runtime/runs/run-epOwvD/stdout.log",
+            "stderr": ".ai/runtime/runs/run-epOwvD/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "test malformed_json_is_diagnosed ... ok",
+              "test aggregate_verification_and_long_command_display_stay_bounded ... ok",
+              "test unix::timeout_and_source_mutating_verification_fail ... ok",
+              "test doctor_reports_read_only_integration_health_for_both_adapters ... ok",
+              "test result: ok. 42 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.02s",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s",
+              "Running unittests src/main.rs (target/debug/deps/aiw-48f647d5a5420b81)",
+              "Running tests/cli.rs (target/debug/deps/cli-07e5c8b06b349bc1)"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-bpkr4W",
+            "argv": [
+              "cargo",
+              "build",
+              "--release",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 60,
+            "stdout": ".ai/runtime/runs/run-bpkr4W/stdout.log",
+            "stderr": ".ai/runtime/runs/run-bpkr4W/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Finished `release` profile [optimized] target(s) in 0.02s"
+            ],
+            "omitted": 0
+          }
+        ]
+      }
+    },
     "release": {
       "title": "Verify and exercise v0.1 release",
       "plan": "v01",
@@ -1968,9 +2128,9 @@
   "active_plan": "v1",
   "active_task": null,
   "checkpoint": {
-    "task": "ci-fixture-command",
-    "next_action": "Push the CI fixture regression fix to the branch that triggered the failing workflow, then wait for the Linux, macOS and Windows CI matrix.",
-    "note": "Fixed the cross-platform CI regression caused by the fixture executable name resolving only through a locally installed AIW. Full declared verification passed after formatting; the explicit no-AIW-on-PATH targeted test also passed.",
-    "source_hash": "6911bffc0fabe45a7c48a8ee283c5200e442ee98d5adb1cc77a9f9ad0f6170e0"
+    "task": "publish-release-assets",
+    "next_action": "Push the release-publishing workflow change, replace v1.0.0 with its verified master commit, then confirm the GitHub Release has all three assets.",
+    "note": "Release asset publishing workflow verified locally: it packages, checks checksums and locked rebuild, then creates or updates the matching GitHub Release and uploads the verified assets. All declared checks passed.",
+    "source_hash": "8b094b143355a6c7f81269f3bf3e71bd2d7a80e876c2be7bafbe3c8be3bf209a"
   }
 }
