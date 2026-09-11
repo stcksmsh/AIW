@@ -18,6 +18,10 @@
     "v02": {
       "title": "AIW v0.2 agent integration",
       "objective": "Make AIW automatically discoverable and enforce its durable lifecycle in Codex and Claude while keeping the CLI canonical"
+    },
+    "v1": {
+      "title": "AIW v1 stable release",
+      "objective": "Ship a documented, locally deterministic, interoperable and supportable AIW release with evidence from real recovery use"
     }
   },
   "tasks": {
@@ -200,6 +204,148 @@
         ]
       }
     },
+    "checkpoint-freshness": {
+      "title": "Report source changes since an active-task checkpoint",
+      "plan": "v1",
+      "status": "pending",
+      "dependencies": [
+        "release-charter"
+      ],
+      "scope": [
+        "src/model.rs",
+        "src/view.rs",
+        "src/workspace.rs",
+        "src/hook.rs",
+        "tests/cli.rs",
+        "docs/specification.md",
+        "docs/operations"
+      ],
+      "acceptance": [
+        "A checkpoint records a deterministic source fingerprint for its selected task without changing verification evidence semantics",
+        "Load and status report when the active task has scoped source changes after its latest checkpoint",
+        "Strict-stop output directs an agent to persist a checkpoint when such changes exist while retaining its one-repeat loop guard",
+        "Regression tests cover unchanged, changed, restored and ignored source paths"
+      ],
+      "constraints": [
+        "Do not infer semantic progress or create checkpoints automatically",
+        "Keep all comparison local, deterministic and independent of providers"
+      ],
+      "verify": [
+        {
+          "argv": [
+            "cargo",
+            "fmt",
+            "--all",
+            "--",
+            "--check"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "--all-targets",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "build",
+            "--release",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        }
+      ],
+      "worker": null,
+      "blocker": null,
+      "result": null,
+      "evidence": null
+    },
+    "compatibility-fixtures": {
+      "title": "Freeze and test the v1 workspace interoperability contract",
+      "plan": "v1",
+      "status": "pending",
+      "dependencies": [
+        "release-charter"
+      ],
+      "scope": [
+        "schemas/workspace-v1.schema.json",
+        "examples",
+        "src/model.rs",
+        "src/main.rs",
+        "tests/cli.rs",
+        "docs/specification.md"
+      ],
+      "acceptance": [
+        "Committed fixtures cover valid workspace state, task transitions, evidence freshness and malformed or unsupported state rejection",
+        "Schema generation, fixture parsing and compatibility behavior are checked by automated tests",
+        "The documentation distinguishes frozen v1 interchange guarantees from reference-client implementation details"
+      ],
+      "constraints": [
+        "Reject unknown or unsupported canonical formats rather than silently translating them",
+        "Do not change v1 semantics without an explicit compatibility decision"
+      ],
+      "verify": [
+        {
+          "argv": [
+            "cargo",
+            "fmt",
+            "--all",
+            "--",
+            "--check"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "--all-targets",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "build",
+            "--release",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        }
+      ],
+      "worker": null,
+      "blocker": null,
+      "result": null,
+      "evidence": null
+    },
     "docs": {
       "title": "Publish specification and practical workflows",
       "plan": "v01",
@@ -264,6 +410,75 @@
           }
         ]
       }
+    },
+    "durability-audit": {
+      "title": "Audit v1 durability and failure recovery guarantees",
+      "plan": "v1",
+      "status": "pending",
+      "dependencies": [
+        "release-charter"
+      ],
+      "scope": [
+        "src/workspace.rs",
+        "src/repo.rs",
+        "src/runner.rs",
+        "tests/cli.rs",
+        "docs/specification.md",
+        "docs/operations"
+      ],
+      "acceptance": [
+        "The documented atomic-write, lock, malformed-state and interrupted-verification behavior is covered by focused regression tests",
+        "Recovery guidance explains how Git restores canonical state and how agents handle missing disposable runtime artifacts",
+        "The audit records any remaining trust-model limits precisely rather than claiming crash, filesystem or hostile-program guarantees AIW cannot provide"
+      ],
+      "constraints": [
+        "Do not add a database, daemon, cloud service or automatic Git mutation"
+      ],
+      "verify": [
+        {
+          "argv": [
+            "cargo",
+            "fmt",
+            "--all",
+            "--",
+            "--check"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "--all-targets",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "build",
+            "--release",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        }
+      ],
+      "worker": null,
+      "blocker": null,
+      "result": null,
+      "evidence": null
     },
     "harden": {
       "title": "Adversarial review and hardening",
@@ -539,6 +754,78 @@
         ]
       }
     },
+    "integration-health": {
+      "title": "Diagnose installed adapter and hook health without provider calls",
+      "plan": "v1",
+      "status": "pending",
+      "dependencies": [
+        "release-charter"
+      ],
+      "scope": [
+        "src/adapter.rs",
+        "src/hook.rs",
+        "src/main.rs",
+        "src/workspace.rs",
+        "tests/cli.rs",
+        "scripts/install-user.sh",
+        "docs/operations",
+        "docs/agent-integration-guide.md"
+      ],
+      "acceptance": [
+        "Doctor reports whether selected Codex and Claude integration files, skill files and AIW-owned hook handlers are present and structurally valid",
+        "The diagnostic remains read-only and does not require an installed provider binary, account, network connection or another tool",
+        "Tests cover missing, malformed, stale and co-installed hook configurations for both adapters"
+      ],
+      "constraints": [
+        "Do not inspect, alter or depend on non-AIW handler behavior",
+        "Preserve the existing exact-handler ownership boundary"
+      ],
+      "verify": [
+        {
+          "argv": [
+            "cargo",
+            "fmt",
+            "--all",
+            "--",
+            "--check"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "--all-targets",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "build",
+            "--release",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        }
+      ],
+      "worker": null,
+      "blocker": null,
+      "result": null,
+      "evidence": null
+    },
     "release": {
       "title": "Verify and exercise v0.1 release",
       "plan": "v01",
@@ -702,13 +989,194 @@
           }
         ]
       }
+    },
+    "release-charter": {
+      "title": "Define the v1 release contract",
+      "plan": "v1",
+      "status": "blocked",
+      "dependencies": [],
+      "scope": [
+        "README.md",
+        "CONTRIBUTING.md",
+        "Cargo.toml",
+        "docs/specification.md",
+        "docs/agent-integration-guide.md",
+        "docs/adr",
+        "LICENSE"
+      ],
+      "acceptance": [
+        "The intended users, supported platforms, provider adapters, release channel and update path are explicitly documented",
+        "The repository records an owner-approved license and public-distribution policy",
+        "The v1 compatibility promise and explicit non-goals are documented without implying model, network or Recall dependencies"
+      ],
+      "constraints": [
+        "Do not select a license or publish channel without the owner decision",
+        "Keep the canonical workspace vendor-neutral and local-only"
+      ],
+      "verify": [
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        }
+      ],
+      "worker": "codex",
+      "blocker": "Need owner decisions on V1 license, release channel and supported-platform promise before documenting or publishing them",
+      "result": null,
+      "evidence": null
+    },
+    "release-distribution": {
+      "title": "Package and publish the approved AIW v1 release",
+      "plan": "v1",
+      "status": "pending",
+      "dependencies": [
+        "release-trials"
+      ],
+      "scope": [
+        "Cargo.toml",
+        "Cargo.lock",
+        "README.md",
+        "CONTRIBUTING.md",
+        "CHANGELOG.md",
+        "LICENSE",
+        "scripts",
+        ".github",
+        "docs"
+      ],
+      "acceptance": [
+        "The approved license, version, support matrix, installation path and update path are implemented and documented",
+        "Release artifacts or the approved source-install release path are reproducible from a tagged commit with checksums or an equivalent integrity mechanism",
+        "CI validates the declared supported platforms and the repository documents how users verify an installed build and skills"
+      ],
+      "constraints": [
+        "Do not publish to crates.io, create an external release, or select a license until the release charter is complete and the owner authorizes that action",
+        "Keep AIW local-first and free of model, account, server and network runtime dependencies"
+      ],
+      "verify": [
+        {
+          "argv": [
+            "cargo",
+            "fmt",
+            "--all",
+            "--",
+            "--check"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "--all-targets",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "build",
+            "--release",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        }
+      ],
+      "worker": null,
+      "blocker": null,
+      "result": null,
+      "evidence": null
+    },
+    "release-trials": {
+      "title": "Collect v1 recovery and lifecycle release evidence",
+      "plan": "v1",
+      "status": "pending",
+      "dependencies": [
+        "checkpoint-freshness",
+        "compatibility-fixtures",
+        "integration-health",
+        "durability-audit"
+      ],
+      "scope": [
+        "docs/dogfood.md",
+        "tests/cli.rs",
+        "integrations/aiw-agent"
+      ],
+      "acceptance": [
+        "Fresh agents recover, claim, checkpoint, verify and hand off interrupted work using only canonical AIW state in at least two independently initialized repositories",
+        "The evidence includes a Claude lifecycle trial and a Codex lifecycle trial when those providers are available, with unavailable providers recorded honestly",
+        "The release evidence reports exact commands, results and material limitations without treating provider memory as canonical state"
+      ],
+      "constraints": [
+        "Keep consumer repositories and their task state independent from AIW repository state",
+        "Do not add runtime dependencies on any consumer project or provider service"
+      ],
+      "verify": [
+        {
+          "argv": [
+            "cargo",
+            "fmt",
+            "--all",
+            "--",
+            "--check"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "--all-targets",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "build",
+            "--release",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        }
+      ],
+      "worker": null,
+      "blocker": null,
+      "result": null,
+      "evidence": null
     }
   },
-  "active_plan": "v02",
-  "active_task": null,
+  "active_plan": "v1",
+  "active_task": "release-charter",
   "checkpoint": {
-    "task": "hook-merge-hardening",
-    "next_action": "Run the declared verification contract, inspect the resulting diff, and persist the hardening result",
-    "note": "Handler ownership is now exact and direct; focused coexistence tests pass for both Codex and Claude in both sequential install orders"
+    "task": "release-charter",
+    "next_action": "Record the owner-approved V1 license, release channel and support matrix, then document the compatibility and non-goal contract",
+    "note": "V1 is planned as deterministic local-first durability, lifecycle and release hardening; structural retrieval remains deferred unless release trials show it blocks recovery"
   }
 }
