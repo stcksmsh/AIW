@@ -381,7 +381,7 @@
     "compatibility-fixtures": {
       "title": "Freeze and test the v1 workspace interoperability contract",
       "plan": "v1",
-      "status": "pending",
+      "status": "in_progress",
       "dependencies": [
         "release-charter"
       ],
@@ -443,7 +443,7 @@
           "timeout_seconds": 600
         }
       ],
-      "worker": null,
+      "worker": "worker-compatibility-fixtures",
       "blocker": null,
       "result": null,
       "evidence": null
@@ -1309,7 +1309,7 @@
     }
   },
   "active_plan": "v1",
-  "active_task": null,
+  "active_task": "compatibility-fixtures",
   "checkpoint": {
     "task": "checkpoint-freshness",
     "next_action": "Run /secondary/Programming/Github/AIW/target/release/aiw load to select the next v1 task; use the rebuilt client for checkpoints containing source_hash.",
