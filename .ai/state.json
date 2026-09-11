@@ -1538,7 +1538,7 @@
     "release-trials": {
       "title": "Collect v1 recovery and lifecycle release evidence",
       "plan": "v1",
-      "status": "pending",
+      "status": "in_progress",
       "dependencies": [
         "checkpoint-freshness",
         "compatibility-fixtures",
@@ -1600,14 +1600,14 @@
           "timeout_seconds": 600
         }
       ],
-      "worker": null,
+      "worker": "worker-release-trials",
       "blocker": null,
       "result": null,
       "evidence": null
     }
   },
   "active_plan": "v1",
-  "active_task": null,
+  "active_task": "release-trials",
   "checkpoint": {
     "task": "integration-health",
     "next_action": "Run aiw load and list ready tasks; dispatch any newly unblocked release or trial task according to its declared scope and dependencies.",
