@@ -578,6 +578,71 @@ fn provider_handoff_uses_only_canonical_state() {
     );
 }
 #[test]
+fn independent_consumer_recovery_trials_keep_state_separate() {
+    let codex = Repo::new(true);
+    let claude = Repo::new(true);
+    for (repo, adapter, first_worker, handoff_worker, interruption) in [
+        (
+            &codex,
+            "codex",
+            "codex-local-trial",
+            "codex-handoff-trial",
+            "Codex worker intentionally interrupted",
+        ),
+        (
+            &claude,
+            "claude",
+            "claude-local-trial",
+            "claude-handoff-trial",
+            "Claude worker intentionally interrupted",
+        ),
+    ] {
+        repo.plan();
+        repo.task("resume", &[]);
+        repo.ok(&["integrate", adapter, "--enforcement", "strict"]);
+        repo.ok(&["hook", "session-start"]);
+        repo.ok(&["task", "claim", "resume", "--worker", first_worker]);
+        repo.ok(&[
+            "checkpoint",
+            "--next",
+            "Fresh worker must recover and transfer the task",
+            "--note",
+            "Only canonical state may transfer this task",
+        ]);
+        let recovered = repo.ok(&["load", "--task", "resume"]);
+        assert!(recovered.contains(first_worker));
+        repo.err(&["hook", "stop", "--strict"], "active task resume");
+        repo.ok(&[
+            "task",
+            "transition",
+            "resume",
+            "blocked",
+            "--reason",
+            interruption,
+        ]);
+        repo.ok(&["task", "transition", "resume", "pending"]);
+        repo.ok(&["task", "claim", "resume", "--worker", handoff_worker]);
+        repo.ok(&["verify", "resume", "--allow-exec"]);
+        repo.ok(&[
+            "task",
+            "transition",
+            "resume",
+            "done",
+            "--result",
+            "Fresh worker recovered, verified, and completed the task",
+        ]);
+    }
+    assert_eq!(
+        codex.state()["tasks"]["resume"]["worker"],
+        json!("codex-handoff-trial")
+    );
+    assert_eq!(
+        claude.state()["tasks"]["resume"]["worker"],
+        json!("claude-handoff-trial")
+    );
+    assert_ne!(codex.path(), claude.path());
+}
+#[test]
 fn adapter_blocks_preserve_user_content_and_are_idempotent() {
     let r = Repo::new(false);
     r.write("AGENTS.md", "User policy\n");

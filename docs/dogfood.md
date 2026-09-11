@@ -68,6 +68,68 @@ visual fix and full 90-second rendered acceptance remain work in the isolated
 Hysteresis task, not evidence for AIW's own release. The original Hysteresis
 checkout was not modified.
 
+## v1 local consumer recovery and lifecycle trials
+
+Recorded 2026-09-11 on Linux with the release build
+`/secondary/Programming/Github/AIW/target/release/aiw` (`aiw 0.2.0`). Two new,
+independent Git repositories were created with `mktemp -d`, at
+`/tmp/aiw-release-codex.Uhz85k` and `/tmp/aiw-release-claude.W8Pa95`. Neither
+repository was copied from AIW and neither consumer state was written back to
+this repository. Each contained its own `.ai/state.json`, plan `v1`, and task
+`resume`.
+
+The Codex consumer used these exact operations (with the same `aiw` executable
+above):
+
+```sh
+git init -q
+aiw init --name 'Codex local lifecycle trial'
+aiw plan add v1 'Local recovery trial' \
+  --objective 'Prove recovery and handoff from canonical state'
+aiw task add resume 'Recover an interrupted task' --plan v1 \
+  --accept 'Fresh process recovers the task contract' \
+  --accept 'Lifecycle handoff persists canonical state' --scope src \
+  --constraint 'Do not use provider memory as state' \
+  --verify '["/secondary/Programming/Github/AIW/target/release/aiw","--version"]'
+aiw integrate codex --enforcement strict
+aiw hook session-start
+aiw task claim resume --worker codex-local-trial
+aiw checkpoint --next 'A fresh process must load the interrupted task and transfer its claim'
+aiw load --task resume
+aiw hook stop --strict
+aiw task transition resume blocked --reason 'Codex worker intentionally interrupted after persisted checkpoint; handoff required'
+aiw task transition resume pending
+aiw task claim resume --worker codex-handoff-trial
+aiw verify resume --allow-exec
+aiw task transition resume done --result 'Fresh local process recovered, transferred, verified, and completed the canonical task.'
+```
+
+`doctor` reported the Codex bootstrap, skill, and all three strict handlers as
+present and valid. The fresh `load` recovered the claim, checkpoint fact, next
+action, acceptance, constraint, and declared argv. `hook stop --strict` exited
+2 while the task was active and unverified. After the recorded interruption,
+the handoff claim verified successfully: `run-1miL1F` ran the declared version
+argv with exit code 0, and the final fresh load reported `resume [done]`.
+
+The Claude consumer repeated the same state-machine trial with
+`aiw init --name 'Claude local lifecycle trial'`, `aiw integrate claude
+--enforcement strict`, workers `claude-local-trial` and
+`claude-handoff-trial`, and the corresponding Claude interruption reason.
+Its `doctor` result reported the Claude bootstrap, skill, and strict handlers
+valid; the fresh load and strict-stop guard had the same results. Its declared
+verification was `run-lyuVNp`, which ran the same version argv with exit code
+0, and its final fresh load reported `resume [done]`.
+
+Both provider executables were locally installed (`codex-cli 0.153.4` and
+Claude Code 2.1.268), but an authenticated provider session was not available
+to these trials: invoking either agent to do work would require a model/service
+call, which the release contract forbids. The trials therefore executed the
+generated provider-specific lifecycle commands locally and validated their
+canonical recovery and handoff behavior; they do not claim an interactive
+provider-session result. The CLI, adapters, and evidence remain local and
+deterministic, and no provider memory, network service, or consumer repository
+state was treated as canonical for AIW.
+
 ## Recovery budget measurement
 
 Run `python3 scripts/measure_recovery.py` after `cargo build`:

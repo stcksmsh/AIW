@@ -1538,7 +1538,7 @@
     "release-trials": {
       "title": "Collect v1 recovery and lifecycle release evidence",
       "plan": "v1",
-      "status": "in_progress",
+      "status": "done",
       "dependencies": [
         "checkpoint-freshness",
         "compatibility-fixtures",
@@ -1602,16 +1602,128 @@
       ],
       "worker": "worker-release-trials",
       "blocker": null,
-      "result": null,
-      "evidence": null
+      "result": "Recorded two independent local Git consumer recovery and strict lifecycle trials for Codex and Claude adapters; each fresh process recovered, claimed, checkpointed, handed off, verified, and completed canonical state. Provider-session calls were unavailable under the no-network/no-model release constraint; all four declared checks passed.",
+      "evidence": {
+        "source_hash": "0f1ced8d556c26222b760844788171f277624bae1242b45a0de9d33992118ed6",
+        "contract_hash": "2ec23757077ea8495fef6a90337f7c7b9acbf30f561f5b5c147d1c9b4d67a2c9",
+        "success": true,
+        "runs": [
+          {
+            "schema_version": 1,
+            "id": "run-UHip0g",
+            "argv": [
+              "cargo",
+              "fmt",
+              "--all",
+              "--",
+              "--check"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 121,
+            "stdout": ".ai/runtime/runs/run-UHip0g/stdout.log",
+            "stderr": ".ai/runtime/runs/run-UHip0g/stderr.log",
+            "diagnostics": [],
+            "tail": [],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-r6bH2Z",
+            "argv": [
+              "cargo",
+              "clippy",
+              "--locked",
+              "--all-targets",
+              "--",
+              "-D",
+              "warnings"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 2613,
+            "stdout": ".ai/runtime/runs/run-r6bH2Z/stdout.log",
+            "stderr": ".ai/runtime/runs/run-r6bH2Z/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Checking serde v1.0.229",
+              "Checking clap v4.6.6",
+              "Checking tempfile v3.27.0",
+              "Checking schemars v1.2.2",
+              "Checking globset v0.4.20",
+              "Checking ignore v0.4.33",
+              "Checking aiw v0.2.0 (/tmp/aiw-release-trials)",
+              "Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.54s"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-XDCPSN",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 2129,
+            "stdout": ".ai/runtime/runs/run-XDCPSN/stdout.log",
+            "stderr": ".ai/runtime/runs/run-XDCPSN/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "test malformed_json_is_diagnosed ... ok",
+              "test aggregate_verification_and_long_command_display_stay_bounded ... ok",
+              "test unix::timeout_and_source_mutating_verification_fail ... ok",
+              "test doctor_reports_read_only_integration_health_for_both_adapters ... ok",
+              "test result: ok. 42 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.01s",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s",
+              "Running unittests src/main.rs (target/debug/deps/aiw-3497df528764ce9d)",
+              "Running tests/cli.rs (target/debug/deps/cli-ed7a4b5f875b9bf9)"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-JzvMQv",
+            "argv": [
+              "cargo",
+              "build",
+              "--release",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 10703,
+            "stdout": ".ai/runtime/runs/run-JzvMQv/stdout.log",
+            "stderr": ".ai/runtime/runs/run-JzvMQv/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "Compiling clap_derive v4.6.4",
+              "Compiling schemars_derive v1.2.2",
+              "Compiling globset v0.4.20",
+              "Compiling clap v4.6.6",
+              "Compiling ignore v0.4.33",
+              "Compiling schemars v1.2.2",
+              "Compiling aiw v0.2.0 (/tmp/aiw-release-trials)",
+              "Finished `release` profile [optimized] target(s) in 10.66s"
+            ],
+            "omitted": 0
+          }
+        ]
+      }
     }
   },
   "active_plan": "v1",
-  "active_task": "release-trials",
+  "active_task": null,
   "checkpoint": {
     "task": "release-trials",
-    "next_action": "Wait for the release-trials worker commit, review and merge it directly into master, re-verify it in the combined checkout, then load any release-distribution work unblocked by trial evidence.",
-    "note": "Coordinator integrated and re-verified compatibility-fixtures, durability-audit and integration-health on master. release-trials is claimed by worker-release-trials in /tmp/aiw-release-trials on codex/release-trials. It must keep trial consumer repositories independent and record provider availability honestly.",
-    "source_hash": "c6109cd4e129a7303eed9ea16cc15ec6cdbe85ced9ace164fa25c2b50f8a8523"
+    "next_action": "Run release-trials verification, transition the task, and commit the documented consumer-trial evidence",
+    "note": "Two independently initialized local Git consumers completed separate Codex and Claude adapter recovery, strict-stop, handoff, verification, and done lifecycles using only their own canonical state.",
+    "source_hash": "758f10187d9664d638c1cddff4bdc4539167f0fa56f6e9c3620dbbd1b8ccb2f7"
   }
 }
