@@ -185,6 +185,6 @@ service. See [worker workflow](docs/operations/task.md).
 - [Changelog](CHANGELOG.md)
 
 v1 deliberately omits semantic symbol resolution, embeddings, MCP/LSP services,
-automatic worker launching/merging, releases, and provider billing integrations.
+automatic worker launching/merging, binary-release automation, and provider billing integrations.
 The next milestone is measured structural Rust retrieval and a broader workspace
 corpus, driven by recovery quality and bytes saved rather than abstraction count.
