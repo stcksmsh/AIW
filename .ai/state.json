@@ -1410,9 +1410,9 @@
   "active_plan": "v1",
   "active_task": "durability-audit",
   "checkpoint": {
-    "task": "compatibility-fixtures",
-    "next_action": "Claim and dispatch one of the remaining overlapping ready tasks in a separate worktree; retain the other pending until integration.",
-    "note": "Worker compatibility-fixtures commit c756babb was integrated as 87c1f96. Coordinator reopened only to perform required combined-checkout verification; all declared checks passed, then the task returned to done with fresh evidence.",
-    "source_hash": "dd7a14ef4f4098366dc4c7bc172ed68ca553b76ddedab24429c399c09c110137"
+    "task": "durability-audit",
+    "next_action": "Wait for the durability-audit worker report and commit, review and integrate it, re-verify it in the combined checkout, then dispatch integration-health.",
+    "note": "Coordinator integrated compatibility-fixtures as 87c1f96 and re-verified it in the combined checkout. durability-audit is claimed by worker-durability-audit in /tmp/aiw-durability-audit on codex/durability-audit; integration-health remains queued because its declared scope overlaps durability.",
+    "source_hash": "7fee3d9b9506ee47f32b9da5d0ac91225fea2f9c8d8505bed9a28aa0c5aee6b2"
   }
 }
