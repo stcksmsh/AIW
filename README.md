@@ -8,7 +8,31 @@ intent and task contracts in Git-friendly files, recovers a small context packet
 and runs verification without dumping build logs into the conversation.
 
 No model, account, server, database, or network connection is required at runtime.
-This is a working v0.2 reference implementation, not an agent orchestration service.
+This is a working v0.2 reference implementation on the path to a stable v1
+release, not an agent orchestration service.
+
+## V1 release contract
+
+AIW v1 is a local-first tool for durable coding-work state. Its supported CLI
+platforms will be Linux, macOS, and Windows. Codex and Claude are the supported
+adapter targets; their skills and hooks remain noncanonical pointers to the same
+vendor-neutral workspace state.
+
+The v1 release channel will be GitHub Releases. Each release will provide a
+versioned source/artifact path with SHA-256 checksums and documented installation
+and update instructions: download the matching release, verify its checksum,
+replace the installed binary, and rerun the personal-skill installer. Crates.io
+publication remains disabled. Until those artifacts exist, install from this
+source checkout as described below.
+
+AIW is licensed under [Apache-2.0](LICENSE). The stable interoperability promise
+is the version-1 workspace schema and its documented semantics. Human-oriented
+text views and runtime artifacts remain implementation details; clients should
+use the canonical schema and explicit operation contracts for interoperability.
+
+V1 does not add model calls, accounts, servers, embeddings, semantic memory,
+automatic worker orchestration, automatic Git mutation, or dependencies on any
+consumer project.
 
 ## Install
 
@@ -28,8 +52,9 @@ The script keeps the binary in Cargo's user install directory (normally
 CLI-only install, use `cargo install --path . --locked`.
 
 For development, use `cargo run -- <arguments>` or `target/debug/aiw` after
-`cargo build`. The crate is not published. No license has been selected by the
-repository owner; see [contributing](CONTRIBUTING.md) before redistributing.
+`cargo build`. The crate is not published to crates.io; the v1 release task will
+add the approved GitHub Release installation path and a Windows personal-skill
+installer.
 
 ## A complete workflow
 

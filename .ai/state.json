@@ -993,7 +993,7 @@
     "release-charter": {
       "title": "Define the v1 release contract",
       "plan": "v1",
-      "status": "blocked",
+      "status": "done",
       "dependencies": [],
       "scope": [
         "README.md",
@@ -1002,6 +1002,7 @@
         "docs/specification.md",
         "docs/agent-integration-guide.md",
         "docs/adr",
+        ".ai/decisions",
         "LICENSE"
       ],
       "acceptance": [
@@ -1024,9 +1025,42 @@
         }
       ],
       "worker": "codex",
-      "blocker": "Need owner decisions on V1 license, release channel and supported-platform promise before documenting or publishing them",
-      "result": null,
-      "evidence": null
+      "blocker": null,
+      "result": "Recorded the approved Apache-2.0 license, GitHub Releases with SHA-256 checksums, crates.io-disabled distribution policy, Linux/macOS/Windows CLI target, Codex/Claude adapter scope, V1 schema promise and explicit non-goals; cargo test passed.",
+      "evidence": {
+        "source_hash": "6a85f861d28834c489102969533fc6c70da4a12374d087a0a99fb9998f1621c9",
+        "contract_hash": "43c7c162dc0d89012693e29a6ce78d21635936dd52cfac5989d3dabfe189de4e",
+        "success": true,
+        "runs": [
+          {
+            "schema_version": 1,
+            "id": "run-SRWyCw",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 1649,
+            "stdout": ".ai/runtime/runs/run-SRWyCw/stdout.log",
+            "stderr": ".ai/runtime/runs/run-SRWyCw/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "test recovery_remains_bounded_after_large_history ... ok",
+              "test malformed_json_is_diagnosed ... ok",
+              "test unix::timeout_and_source_mutating_verification_fail ... ok",
+              "test aggregate_verification_and_long_command_display_stay_bounded ... ok",
+              "test result: ok. 34 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.55s",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s",
+              "Running unittests src/main.rs (target/debug/deps/aiw-3497df528764ce9d)",
+              "Running tests/cli.rs (target/debug/deps/cli-ed7a4b5f875b9bf9)"
+            ],
+            "omitted": 0
+          }
+        ]
+      }
     },
     "release-distribution": {
       "title": "Package and publish the approved AIW v1 release",
@@ -1173,10 +1207,10 @@
     }
   },
   "active_plan": "v1",
-  "active_task": "release-charter",
+  "active_task": null,
   "checkpoint": {
     "task": "release-charter",
-    "next_action": "Record the owner-approved V1 license, release channel and support matrix, then document the compatibility and non-goal contract",
-    "note": "V1 is planned as deterministic local-first durability, lifecycle and release hardening; structural retrieval remains deferred unless release trials show it blocks recovery"
+    "next_action": "Claim checkpoint-freshness and design a deterministic checkpoint source fingerprint with advisory lifecycle reporting",
+    "note": "Owner approved Apache-2.0, GitHub Releases with SHA-256 checksums, crates.io disabled, and Linux/macOS/Windows CLI support with Codex and Claude adapters"
   }
 }

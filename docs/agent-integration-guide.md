@@ -42,6 +42,12 @@ The binary directory must be on `PATH` in the agent process. A CLI-only install 
 cargo install --path /path/to/AIW --locked
 ```
 
+V1 will distribute versioned installs through GitHub Releases with SHA-256
+checksums. The CLI support target is Linux, macOS, and Windows. The current Bash
+installer supports Linux and macOS source checkouts; the v1 distribution task owns
+the equivalent Windows personal-skill installer. Crates.io publication is not part
+of the release channel.
+
 ## Enable a repository
 
 Run this from the repository root:

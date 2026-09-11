@@ -5,6 +5,8 @@ edition = "2024"
 rust-version = "1.93"
 description = "Vendor-neutral persistent workspaces for disposable coding agents"
 readme = "README.md"
+license = "Apache-2.0"
+repository = "https://github.com/stcksmsh/AIW"
 publish = false
 
 [dependencies]

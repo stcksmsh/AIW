@@ -20,7 +20,6 @@ with `cargo run -- schema`, inspect the diff and update the specification. Do no
 silently change version-1 semantics after release. Prefer tests of observable
 contracts and failure recovery over tests mirroring private functions.
 
-No software license has been selected by the owner. An explicit permissive
-license such as MIT or Apache-2.0 is worth considering before public distribution,
-but that decision is reserved for the owner. `publish = false` prevents accidental
-crates.io publication. CI builds and tests; it does not publish or release.
+AIW is licensed under Apache-2.0. `publish = false` prevents accidental crates.io
+publication; the approved v1 distribution channel is GitHub Releases with
+checksummed artifacts. CI builds and tests but does not publish or release.

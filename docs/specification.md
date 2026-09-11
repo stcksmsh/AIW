@@ -130,6 +130,13 @@ state. v1 is the first format; no legacy migration exists. A future migration mu
 validate source version, write a backup, explicitly transform and validate state,
 then atomically replace it under lock. Never relabel an unknown version as v1.
 
+The AIW product v1 release stabilizes this workspace schema and the semantics in
+this document. It does not freeze every human-oriented CLI text view, derived-index
+provenance, or disposable runtime artifact. Interoperating clients should consume
+the canonical state/schema and operation contracts; they MUST reject unsupported
+canonical versions rather than silently translating them. Provider adapters remain
+noncanonical and cannot change these guarantees.
+
 `init` preserves existing state/policy, fills missing scaffold files, and refreshes
 derived discovery. `load` reads state and current Git/source facts; it never runs
 acceptance commands. Default output ≤8,192 UTF-8 bytes; configurable 2,048–32,768.
