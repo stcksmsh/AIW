@@ -137,6 +137,33 @@ impl Repo {
             .unwrap();
         assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
     }
+    fn ok_at(&self, directory: &Path, args: &[&str]) -> String {
+        let out = Command::new(BIN)
+            .args(args)
+            .current_dir(directory)
+            .env_remove("AIW_AGENT")
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{args:?}: {}\n{}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+        String::from_utf8(out.stdout).unwrap()
+    }
+    fn git_at(&self, directory: &Path, args: &[&str]) {
+        let out = Command::new("git")
+            .args(args)
+            .current_dir(directory)
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+    }
 }
 
 #[test]
@@ -313,6 +340,89 @@ fn done_evidence_stale_after_external_merge() {
     assert!(r.ok(&["load"]).contains("Stale done evidence: a"));
     assert_eq!(r.state(), before_read);
     assert_eq!(r.state()["tasks"]["a"]["status"], "done");
+}
+#[test]
+fn managed_worktree_lifecycle() {
+    let r = Repo::new(true);
+    r.plan();
+    r.task("done-task", &[]);
+    r.task("cancelled-task", &[]);
+    r.git(&["add", "."]);
+    r.git(&["commit", "-qm", "task worktree fixture"]);
+    let holder = tempfile::tempdir().unwrap();
+
+    let done_path = holder.path().join("done-task");
+    r.ok(&[
+        "worktree",
+        "create",
+        "done-task",
+        "--path",
+        done_path.to_str().unwrap(),
+    ]);
+    assert!(done_path.join(".git").is_file());
+    assert!(
+        r.ok_at(&done_path, &["load", "--task", "done-task"])
+            .contains("Task done-task")
+    );
+    r.ok_at(
+        &done_path,
+        &["task", "claim", "done-task", "--worker", "worker"],
+    );
+    r.ok_at(&done_path, &["verify", "done-task", "--allow-exec"]);
+    r.ok_at(
+        &done_path,
+        &[
+            "task",
+            "transition",
+            "done-task",
+            "done",
+            "--result",
+            "Verified in managed worktree",
+        ],
+    );
+    r.git_at(&done_path, &["add", ".ai/state.json"]);
+    r.git_at(&done_path, &["commit", "-qm", "complete task"]);
+    r.ok(&[
+        "worktree",
+        "cleanup",
+        "done-task",
+        "--path",
+        done_path.to_str().unwrap(),
+    ]);
+    assert!(!done_path.exists());
+    r.git(&[
+        "show-ref",
+        "--verify",
+        "--quiet",
+        "refs/heads/aiw/task/done-task",
+    ]);
+
+    let cancelled_path = holder.path().join("cancelled-task");
+    r.ok(&[
+        "worktree",
+        "create",
+        "cancelled-task",
+        "--path",
+        cancelled_path.to_str().unwrap(),
+    ]);
+    r.ok_at(
+        &cancelled_path,
+        &["task", "claim", "cancelled-task", "--worker", "worker"],
+    );
+    r.ok_at(
+        &cancelled_path,
+        &["task", "transition", "cancelled-task", "cancelled"],
+    );
+    r.git_at(&cancelled_path, &["add", ".ai/state.json"]);
+    r.git_at(&cancelled_path, &["commit", "-qm", "cancel task"]);
+    r.ok(&[
+        "worktree",
+        "cleanup",
+        "cancelled-task",
+        "--path",
+        cancelled_path.to_str().unwrap(),
+    ]);
+    assert!(!cancelled_path.exists());
 }
 #[test]
 fn incremental_index_detects_same_size_edits_and_deletions() {

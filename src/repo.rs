@@ -30,6 +30,74 @@ pub fn git(dir: &Path, args: &[&str]) -> Option<String> {
         .success()
         .then(|| String::from_utf8_lossy(&out.stdout).trim_end().into())
 }
+
+fn checked_git(dir: &Path, args: &[&str]) -> Result<String> {
+    let out = Command::new("git")
+        .args(args)
+        .env("GIT_OPTIONAL_LOCKS", "0")
+        .current_dir(dir)
+        .output()
+        .with_context(|| format!("run git {}", args.join(" ")))?;
+    ensure!(
+        out.status.success(),
+        "git {} failed: {}",
+        args.join(" "),
+        String::from_utf8_lossy(&out.stderr).trim()
+    );
+    Ok(String::from_utf8_lossy(&out.stdout).trim_end().into())
+}
+
+pub fn worktree_branch(task: &str) -> String {
+    format!("aiw/task/{task}")
+}
+
+pub fn create_worktree(root: &Path, task: &str, path: &Path) -> Result<String> {
+    ensure!(
+        git_root(root).is_some(),
+        "worktree commands require a Git repository"
+    );
+    ensure!(
+        !path.exists(),
+        "worktree path already exists: {}",
+        path.display()
+    );
+    ensure!(
+        !path.starts_with(root),
+        "worktree path must be outside the main workspace"
+    );
+    let path = path
+        .to_str()
+        .context("non-UTF-8 worktree path unsupported")?;
+    let branch = worktree_branch(task);
+    checked_git(root, &["worktree", "add", "-b", &branch, path])?;
+    Ok(branch)
+}
+
+pub fn worktree_registered(root: &Path, path: &Path) -> Result<bool> {
+    let expected = fs::canonicalize(path)
+        .with_context(|| format!("canonicalize worktree path {}", path.display()))?;
+    let listed = checked_git(root, &["worktree", "list", "--porcelain"])?;
+    Ok(listed
+        .lines()
+        .filter_map(|line| line.strip_prefix("worktree "))
+        .any(|listed| fs::canonicalize(listed).is_ok_and(|listed| listed == expected)))
+}
+
+pub fn worktree_branch_matches(path: &Path, task: &str) -> Result<bool> {
+    Ok(checked_git(path, &["branch", "--show-current"])? == worktree_branch(task))
+}
+
+pub fn worktree_clean(path: &Path) -> Result<bool> {
+    Ok(checked_git(path, &["status", "--porcelain"])?.is_empty())
+}
+
+pub fn remove_worktree(root: &Path, path: &Path) -> Result<()> {
+    let path = path
+        .to_str()
+        .context("non-UTF-8 worktree path unsupported")?;
+    checked_git(root, &["worktree", "remove", path])?;
+    Ok(())
+}
 pub fn excluded(path: &str) -> bool {
     path == ".ai/state.json"
         || path.starts_with(".ai/derived/")

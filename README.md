@@ -170,7 +170,10 @@ aiw load
 ```
 
 Worktrees have separate state copies and locks; they are not a distributed claim
-service. See [worker workflow](docs/operations/task.md).
+service. `aiw worktree create TASK --path PATH` creates branch `aiw/task/TASK`.
+Run claim, verification and transition inside it. After committing a done or
+cancelled task's state, `aiw worktree cleanup TASK --path PATH` removes only that
+clean worktree and retains its branch. See [worktree operation](docs/operations/worktree.md).
 
 ## Scope and documentation
 

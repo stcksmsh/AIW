@@ -69,6 +69,11 @@ enum Op {
         #[command(subcommand)]
         action: TaskOp,
     },
+    /// Create and clean task-bound Git worktrees.
+    Worktree {
+        #[command(subcommand)]
+        action: WorktreeOp,
+    },
     /// Execute explicit argv; full output is saved, a compact receipt is printed.
     Run {
         #[arg(long, default_value_t = 600)]
@@ -192,6 +197,21 @@ enum TaskOp {
         result: Option<String>,
     },
 }
+#[derive(Subcommand)]
+enum WorktreeOp {
+    /// Create a new worktree on branch aiw/task/TASK.
+    Create {
+        task: String,
+        #[arg(long)]
+        path: PathBuf,
+    },
+    /// Remove a clean terminal task worktree. The branch remains.
+    Cleanup {
+        task: String,
+        #[arg(long)]
+        path: PathBuf,
+    },
+}
 fn print(value: &impl serde::Serialize) -> Result<()> {
     println!("{}", serde_json::to_string_pretty(value)?);
     Ok(())
@@ -253,6 +273,7 @@ fn dispatch(cli: Cli) -> Result<()> {
         Op::Show { .. } => "show",
         Op::Plan { .. } => "plan",
         Op::Task { .. } => "task",
+        Op::Worktree { .. } => "worktree",
         Op::Run { .. } => "run",
         Op::Verify { .. } => "verify",
         Op::Checkpoint { .. } => "checkpoint",
@@ -435,6 +456,56 @@ fn dispatch(cli: Cli) -> Result<()> {
                 ws.save(&state)?;
                 print(&json!({"saved":true}))?;
             }
+            Op::Worktree { action } => match action {
+                WorktreeOp::Create { task, path } => {
+                    model::valid_id(&task)?;
+                    let task_state = state.tasks.get(&task).context("unknown task")?;
+                    ensure!(
+                        !task_state.status.terminal(),
+                        "cannot create a worktree for terminal task {task}"
+                    );
+                    let path = if path.is_absolute() {
+                        path
+                    } else {
+                        ws.root.join(path)
+                    };
+                    let branch = repo::create_worktree(&ws.root, &task, &path)?;
+                    print(&json!({"task":task,"branch":branch,"path":path}))?;
+                }
+                WorktreeOp::Cleanup { task, path } => {
+                    model::valid_id(&task)?;
+                    let path = if path.is_absolute() {
+                        path
+                    } else {
+                        ws.root.join(path)
+                    };
+                    ensure!(
+                        repo::worktree_registered(&ws.root, &path)?,
+                        "path is not a registered Git worktree: {}",
+                        path.display()
+                    );
+                    ensure!(
+                        repo::worktree_branch_matches(&path, &task)?,
+                        "worktree branch must be {}",
+                        repo::worktree_branch(&task)
+                    );
+                    ensure!(
+                        repo::worktree_clean(&path)?,
+                        "worktree has uncommitted changes; commit or discard them before cleanup"
+                    );
+                    let worktree = Workspace::discover(&path)?;
+                    let worktree_state = worktree.read()?;
+                    let task_state = worktree_state.tasks.get(&task).context("unknown task")?;
+                    ensure!(
+                        task_state.status.terminal(),
+                        "worktree task {task} must be done or cancelled before cleanup"
+                    );
+                    repo::remove_worktree(&ws.root, &path)?;
+                    print(
+                        &json!({"task":task,"path":path,"removed":true,"branch_retained":repo::worktree_branch(&task)}),
+                    )?;
+                }
+            },
             Op::Run { timeout, argv } => {
                 let result = runner::run(
                     &ws,

@@ -12,6 +12,7 @@ No operation itself invokes an LLM. Human/agent judgment supplies semantic inten
 - [task and worker workflow](task.md)
 - [run](run.md)
 - [verify](verify.md)
+- [worktree](worktree.md)
 - [checkpoint](checkpoint.md)
 - [index](index.md)
 - [probe](probe.md)
