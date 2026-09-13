@@ -45,12 +45,23 @@ pub fn selected<'a>(state: &'a State, requested: Option<&'a str>) -> Option<&'a 
                 .map(|(id, _)| id.as_str())
         })
 }
+
+fn stale_done_tasks(state: &State, source: &str) -> Result<Vec<String>> {
+    let mut ids = vec![];
+    for (id, task) in &state.tasks {
+        if task.status == Status::Done && runner::health(state, task, source)? == "stale" {
+            ids.push(id.clone());
+        }
+    }
+    Ok(ids)
+}
 pub fn status(ws: &Workspace, state: &State) -> Result<Value> {
     let mut counts = std::collections::BTreeMap::new();
     for task in state.tasks.values() {
         *counts.entry(task.status.label()).or_insert(0) += 1;
     }
     let source = repo::fingerprint(&ws.root)?;
+    let stale_done_tasks = stale_done_tasks(state, &source)?;
     let selected = selected(state, None);
     let verification = selected
         .map(|id| runner::health(state, &state.tasks[id], &source))
@@ -59,7 +70,7 @@ pub fn status(ws: &Workspace, state: &State) -> Result<Value> {
         .map(|id| ws.checkpoint_freshness(state, id))
         .transpose()?;
     Ok(
-        json!({"schema_version":1,"project":clip(&state.project.name,160),"active_plan":state.active_plan,"active_task":state.active_task,"selected_task":selected,"tasks":counts,"verification":verification,"checkpoint_freshness":checkpoint_freshness,"git_head":repo::git(&ws.root,&["rev-parse","--short","HEAD"]),"git_status":clip(&repo::git(&ws.root,&["status","--short","--untracked-files=normal"]).unwrap_or_default(),1500)}),
+        json!({"schema_version":1,"project":clip(&state.project.name,160),"active_plan":state.active_plan,"active_task":state.active_task,"selected_task":selected,"tasks":counts,"verification":verification,"checkpoint_freshness":checkpoint_freshness,"stale_done_tasks":stale_done_tasks,"git_head":repo::git(&ws.root,&["rev-parse","--short","HEAD"]),"git_status":clip(&repo::git(&ws.root,&["status","--short","--untracked-files=normal"]).unwrap_or_default(),1500)}),
     )
 }
 pub fn load(ws: &Workspace, state: &State, task_id: Option<&str>, budget: usize) -> Result<String> {
@@ -71,6 +82,14 @@ pub fn load(ws: &Workspace, state: &State, task_id: Option<&str>, budget: usize)
         ensure!(state.tasks.contains_key(id), "unknown task {id}");
     }
     let mut lines = vec![format!("AIW v1 | {}", clip(&state.project.name,160)), format!("Purpose: {}", clip(&state.project.description,300)), "Authority: .ai/state.json + .ai/policy.md + .ai/decisions/. Read .ai/policy.md once; Git/source outrank derived views.".into()];
+    let source = repo::fingerprint(&ws.root)?;
+    let stale_done_tasks = stale_done_tasks(state, &source)?;
+    if !stale_done_tasks.is_empty() {
+        lines.push(format!(
+            "Stale done evidence: {}; tasks remain done, but recorded verification no longer matches current source.",
+            stale_done_tasks.join(", ")
+        ));
+    }
     let selected = selected(state, task_id);
     if let Some(id) = selected {
         let t = &state.tasks[id];
@@ -86,7 +105,6 @@ pub fn load(ws: &Workspace, state: &State, task_id: Option<&str>, budget: usize)
             t.status.label(),
             clip(&t.title, 240)
         ));
-        let source = repo::fingerprint(&ws.root)?;
         let health = runner::health(state, t, &source)?;
         lines.push(format!(
             "Verification: {health}; {} declared command(s). Details: aiw show task {id}",

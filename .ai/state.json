@@ -22,6 +22,10 @@
     "v1": {
       "title": "AIW v1 stable release",
       "objective": "Ship a documented, locally deterministic, interoperable and supportable AIW release with evidence from real recovery use"
+    },
+    "v1-hardening": {
+      "title": "AIW v1 hardening gaps",
+      "objective": "Close stale-evidence, task-worktree and explicit GitHub adapter gaps without weakening offline deterministic core lifecycle"
     }
   },
   "tasks": {
@@ -942,6 +946,58 @@
         ]
       }
     },
+    "github-issue-pr-adapter": {
+      "title": "Import agent issues and open completion PRs",
+      "plan": "v1-hardening",
+      "status": "pending",
+      "dependencies": [
+        "worktree-lifecycle"
+      ],
+      "scope": [
+        "src/main.rs",
+        "src/github.rs",
+        "src/repo.rs",
+        "tests/cli.rs",
+        "Cargo.toml",
+        "Cargo.lock",
+        "docs/operations",
+        "README.md",
+        ".github"
+      ],
+      "acceptance": [
+        "Explicit opt-in adapter imports one GitHub Issue labeled agent into a correctly populated AIW task from title and body",
+        "Explicit opt-in adapter opens one PR from completed task branch with declared body",
+        "Integration test against mock GitHub API verifies labeled issue import and completion PR branch/body"
+      ],
+      "constraints": [
+        "Adapter requires explicit invocation and token; no core task lifecycle command requires GitHub, network or authentication",
+        "No dashboard, scheduler, polling loop, multi-repo behavior or Recall dependency",
+        "Do not change task, evidence, checkpoint, lifecycle-hook or local-lock schemas"
+      ],
+      "verify": [
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "github_agent_issue_import_and_pr_open"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        }
+      ],
+      "worker": null,
+      "blocker": null,
+      "result": null,
+      "evidence": null
+    },
     "harden": {
       "title": "Adversarial review and hardening",
       "plan": "v01",
@@ -1381,6 +1437,115 @@
             "diagnostics": [],
             "tail": [
               "Finished `release` profile [optimized] target(s) in 0.03s"
+            ],
+            "omitted": 0
+          }
+        ]
+      }
+    },
+    "merge-reverification": {
+      "title": "Flag done evidence stale after source changes",
+      "plan": "v1-hardening",
+      "status": "done",
+      "dependencies": [],
+      "scope": [
+        "src/main.rs",
+        "src/model.rs",
+        "src/runner.rs",
+        "src/view.rs",
+        "src/workspace.rs",
+        "tests/cli.rs",
+        "docs/specification.md",
+        "docs/operations"
+      ],
+      "acceptance": [
+        "Status or load flags each done task whose recorded evidence source hash no longer matches current source",
+        "A completed-task integration test mutates verified source as an external merge would and observes stale status rather than silently done",
+        "Existing evidence, task, checkpoint and lifecycle schemas remain unchanged"
+      ],
+      "constraints": [
+        "Do not mutate evidence or task status while parsing or displaying stale state",
+        "Keep stale detection local, deterministic and independent of Git hosting or provider services"
+      ],
+      "verify": [
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "done_evidence_stale_after_external_merge"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        }
+      ],
+      "worker": "codex",
+      "blocker": null,
+      "result": "Added read-only stale done-evidence detection to status and load. Simulated external merge integration test confirms stale evidence is visible while terminal task state remains unchanged; focused and full cargo tests passed.",
+      "evidence": {
+        "source_hash": "1f9b8b0ce401969f161cbc4933401d3ee588c48d696c2a66c5d1ae36fbb2bcd8",
+        "contract_hash": "2695b862fc9ac620aac8a3a09a23dcb6ffb45fe8b15fd0dfed4533d01bf20b9f",
+        "success": true,
+        "runs": [
+          {
+            "schema_version": 1,
+            "id": "run-OhtW0g",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked",
+              "done_evidence_stale_after_external_merge"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 3156,
+            "stdout": ".ai/runtime/runs/run-OhtW0g/stdout.log",
+            "stderr": ".ai/runtime/runs/run-OhtW0g/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "running 0 tests",
+              "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s",
+              "running 1 test",
+              "test done_evidence_stale_after_external_merge ... ok",
+              "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 42 filtered out; finished in 3.06s",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s",
+              "Running unittests src/main.rs (target/debug/deps/aiw-48f647d5a5420b81)",
+              "Running tests/cli.rs (target/debug/deps/cli-07e5c8b06b349bc1)"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-WZLtnE",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 2956,
+            "stdout": ".ai/runtime/runs/run-WZLtnE/stdout.log",
+            "stderr": ".ai/runtime/runs/run-WZLtnE/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "test malformed_json_is_diagnosed ... ok",
+              "test aggregate_verification_and_long_command_display_stay_bounded ... ok",
+              "test unix::timeout_and_source_mutating_verification_fail ... ok",
+              "test doctor_reports_read_only_integration_health_for_both_adapters ... ok",
+              "test result: ok. 43 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.83s",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.03s",
+              "Running unittests src/main.rs (target/debug/deps/aiw-48f647d5a5420b81)",
+              "Running tests/cli.rs (target/debug/deps/cli-07e5c8b06b349bc1)"
             ],
             "omitted": 0
           }
@@ -2123,14 +2288,62 @@
           }
         ]
       }
+    },
+    "worktree-lifecycle": {
+      "title": "Manage task-bound Git worktrees",
+      "plan": "v1-hardening",
+      "status": "pending",
+      "dependencies": [
+        "merge-reverification"
+      ],
+      "scope": [
+        "src/main.rs",
+        "src/repo.rs",
+        "src/workspace.rs",
+        "tests/cli.rs",
+        "docs/operations",
+        "README.md"
+      ],
+      "acceptance": [
+        "New commands create a Git worktree on a task branch and bind it to a specified task without automatic merge or push",
+        "New cleanup command removes only task worktrees after task reaches done or cancelled",
+        "Integration test creates managed worktree, claims, loads and verifies task inside it, then cleans it after done or cancelled"
+      ],
+      "constraints": [
+        "Do not change task, evidence, checkpoint, hook or lock schemas",
+        "Do not merge, push, delete a branch, or operate outside requested managed worktree paths automatically"
+      ],
+      "verify": [
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked",
+            "managed_worktree_lifecycle"
+          ],
+          "timeout_seconds": 600
+        },
+        {
+          "argv": [
+            "cargo",
+            "test",
+            "--locked"
+          ],
+          "timeout_seconds": 600
+        }
+      ],
+      "worker": null,
+      "blocker": null,
+      "result": null,
+      "evidence": null
     }
   },
-  "active_plan": "v1",
+  "active_plan": "v1-hardening",
   "active_task": null,
   "checkpoint": {
-    "task": "publish-release-assets",
-    "next_action": "Push the release-publishing workflow change, replace v1.0.0 with its verified master commit, then confirm the GitHub Release has all three assets.",
-    "note": "Release asset publishing workflow verified locally: it packages, checks checksums and locked rebuild, then creates or updates the matching GitHub Release and uploads the verified assets. All declared checks passed.",
-    "source_hash": "8b094b143355a6c7f81269f3bf3e71bd2d7a80e876c2be7bafbe3c8be3bf209a"
+    "task": "merge-reverification",
+    "next_action": "Claim worktree-lifecycle, inspect Git worktree behavior and implement only task-bound create and cleanup commands",
+    "note": "Provider-trial docs now state no authenticated session evidence. Done evidence now reports stale read-only after external source merge.",
+    "source_hash": "3e4e9eaec9c3d80eb660878ca29663dece184d371085076b6224ec784c8aa149"
   }
 }

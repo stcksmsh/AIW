@@ -4,7 +4,9 @@
 
 **Inputs.** Working directory.
 
-**Outputs.** JSON counts, selected task, freshness and capped Git status.
+**Outputs.** JSON counts, selected task, freshness, stale done evidence and capped
+Git status. `stale_done_tasks` lists terminal tasks whose recorded evidence source
+hash no longer matches current source. AIW does not reopen them automatically.
 `checkpoint_freshness` is `unchanged`, `changed`, `missing` (no checkpoint for the
 selected task), `unknown` (legacy checkpoint without a hash), or null (no selected
 task). It is independent of `verification` health.

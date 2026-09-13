@@ -286,6 +286,35 @@ fn source_and_contract_changes_invalidate_evidence() {
     assert_eq!(r.json(&["status"])["verification"], "stale");
 }
 #[test]
+fn done_evidence_stale_after_external_merge() {
+    let r = Repo::new(true);
+    r.plan();
+    r.task("a", &[]);
+    r.write("src/lib.rs", "fn before_merge() {}\n");
+    r.done("a");
+    r.git(&["add", "."]);
+    r.git(&["commit", "-qm", "baseline evidence"]);
+
+    r.git(&["checkout", "-qb", "external-merge"]);
+    r.write("src/lib.rs", "fn merged_source() {}\n");
+    r.git(&["add", "src/lib.rs"]);
+    r.git(&["commit", "-qm", "external source change"]);
+    r.git(&["checkout", "-"]);
+    r.git(&[
+        "merge",
+        "--no-ff",
+        "external-merge",
+        "-m",
+        "simulated external merge",
+    ]);
+
+    let before_read = r.state();
+    assert_eq!(r.json(&["status"])["stale_done_tasks"], json!(["a"]));
+    assert!(r.ok(&["load"]).contains("Stale done evidence: a"));
+    assert_eq!(r.state(), before_read);
+    assert_eq!(r.state()["tasks"]["a"]["status"], "done");
+}
+#[test]
 fn incremental_index_detects_same_size_edits_and_deletions() {
     let r = Repo::new(true);
     r.write("src/a.rs", "fn alpha() {}\n");

@@ -41,32 +41,17 @@ fresh, independent CLI processes:
 All steps pass. No format conversion or vendor memory is involved. The Git
 worktree test separately confirms that `.git` files and clean cloned state work.
 
-## v0.2 installed-agent recovery trial
+## v0.2 interrupted-work fixture preparation
 
-The v0.2 integration was tested against an isolated snapshot of an interrupted
-Hysteresis checkout. Its root `AGENTS.md` was 64,404 bytes, and Codex reported
-truncating it at the 32 KiB instruction budget. The generated AIW bootstrap was
-still present because v0.2 places it at the beginning. AIW reconstructed the
-latest Julia-render feedback as a bounded task contract with acceptance, scope,
-constraints, verification commands, and the exact known failing frame.
+The v0.2 integration was prepared against an isolated snapshot of an interrupted
+Hysteresis checkout. Its root `AGENTS.md` was 64,404 bytes, so the generated AIW
+bootstrap was placed at the beginning to remain visible under bounded instruction
+loading. The snapshot supplied bounded task-contract input: acceptance, scope,
+constraints, verification commands, and a known failing render frame.
 
-A fresh ephemeral Codex process with no prior conversation loaded the project
-skill, ran `aiw load`, showed and claimed the task, and reproduced the boundary
-regression at frame 399 (`zoom=0.37996876`, escape spread 0). It was intentionally
-stopped when the user selected Claude for the continuing trial; it made no scoped
-source edits. A fresh authenticated Claude Code 2.1.268 process then:
-
-1. ran the generated `SessionStart` hook successfully;
-2. received the bounded recovery packet as hook context;
-3. discovered and explicitly launched the personal `aiw-workspace` skill;
-4. ran `aiw load`, read the task, and claimed it as `claude-aiw-trial`;
-5. reproduced the same existing failing `hyst-render` boundary test.
-
-This is a successful live provider round trip for startup injection, skill
-discovery, canonical recovery, claim transfer, and baseline reproduction. The
-visual fix and full 90-second rendered acceptance remain work in the isolated
-Hysteresis task, not evidence for AIW's own release. The original Hysteresis
-checkout was not modified.
+No tracked session log, fixture, or transcript proves an authenticated Codex or
+Claude provider session completed this workflow. Do not treat this preparation as
+provider-lifecycle evidence. The original Hysteresis checkout was not modified.
 
 ## v1 local consumer recovery and lifecycle trials
 
