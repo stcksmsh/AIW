@@ -1,8 +1,8 @@
 use serde_json::{Value, json};
 use std::{
-    fs,
+    env, fs,
     io::Write,
-    path::Path,
+    path::{Path, PathBuf},
     process::{Command, Output, Stdio},
 };
 use tempfile::TempDir;
@@ -69,6 +69,24 @@ impl Repo {
     }
     fn json(&self, args: &[&str]) -> Value {
         serde_json::from_str(&self.ok(args)).unwrap()
+    }
+    fn json_env(&self, args: &[&str], variables: &[(&str, String)]) -> Value {
+        let mut command = Command::new(BIN);
+        command
+            .args(args)
+            .current_dir(self.path())
+            .env_remove("AIW_AGENT");
+        for (name, value) in variables {
+            command.env(name, value);
+        }
+        let out = command.output().unwrap();
+        assert!(
+            out.status.success(),
+            "{args:?}: {}\n{}",
+            String::from_utf8_lossy(&out.stdout),
+            String::from_utf8_lossy(&out.stderr)
+        );
+        serde_json::from_slice(&out.stdout).unwrap()
     }
     fn write(&self, path: &str, content: &str) {
         let p = self.path().join(path);
@@ -423,6 +441,116 @@ fn managed_worktree_lifecycle() {
         cancelled_path.to_str().unwrap(),
     ]);
     assert!(!cancelled_path.exists());
+}
+#[cfg(unix)]
+fn mock_github_cli(directory: &Path) -> (PathBuf, PathBuf) {
+    use std::os::unix::fs::PermissionsExt;
+
+    let gh = directory.join("gh");
+    let log = directory.join("gh-args.log");
+    fs::write(
+        &gh,
+        r#"#!/bin/sh
+if [ "$2" = "repos/example/repo/issues/7" ]; then
+  printf '%s' '{"number":7,"title":"Import agent issue","body":"Build deterministic adapter.\n\n## Acceptance\n- Imported task keeps issue title\n- Completed task opens PR","labels":[{"name":"agent"}]}'
+  exit 0
+fi
+if [ "$4" = "repos/example/repo/pulls" ]; then
+  printf '%s\n' "$@" > "$AIW_GH_LOG"
+  printf '%s' '{"number":9,"html_url":"https://example.test/pr/9"}'
+  exit 0
+fi
+printf '%s\n' "unexpected gh arguments: $*" >&2
+exit 1
+"#,
+    )
+    .unwrap();
+    let mut permissions = fs::metadata(&gh).unwrap().permissions();
+    permissions.set_mode(0o755);
+    fs::set_permissions(&gh, permissions).unwrap();
+    (gh, log)
+}
+#[cfg(unix)]
+#[test]
+fn github_agent_issue_import_and_pr_open() {
+    let r = Repo::new(true);
+    r.plan();
+    r.git(&["add", "."]);
+    r.git(&["commit", "-qm", "GitHub adapter fixture"]);
+    let fake = tempfile::tempdir().unwrap();
+    let (_, log) = mock_github_cli(fake.path());
+    let path = format!(
+        "{}:{}",
+        fake.path().display(),
+        env::var("PATH").unwrap_or_default()
+    );
+    let variables = [
+        ("PATH", path),
+        ("GH_TOKEN", "test-token".into()),
+        ("AIW_GH_LOG", log.display().to_string()),
+    ];
+    let imported = r.json_env(
+        &[
+            "github",
+            "import-issue",
+            "--repo",
+            "example/repo",
+            "--issue",
+            "7",
+        ],
+        &variables,
+    );
+    assert_eq!(imported["task"], "github-issue-7");
+    assert_eq!(
+        r.state()["tasks"]["github-issue-7"]["title"],
+        "Import agent issue"
+    );
+    assert_eq!(
+        r.state()["tasks"]["github-issue-7"]["acceptance"],
+        json!(["Imported task keeps issue title", "Completed task opens PR"])
+    );
+    assert_eq!(
+        r.state()["plans"]["github-issue-7"]["objective"],
+        "Build deterministic adapter."
+    );
+
+    r.git(&["checkout", "-qb", "aiw/task/github-issue-7"]);
+    let mut state = r.state();
+    state["tasks"]["github-issue-7"]["verify"] =
+        json!([{"argv":[BIN,"--version"],"timeout_seconds":600}]);
+    r.save(&state);
+    r.ok(&["task", "claim", "github-issue-7", "--worker", "worker"]);
+    r.ok(&["verify", "github-issue-7", "--allow-exec"]);
+    r.ok(&[
+        "task",
+        "transition",
+        "github-issue-7",
+        "done",
+        "--result",
+        "Completed imported issue",
+    ]);
+    r.git(&["add", ".ai/state.json"]);
+    r.git(&["commit", "-qm", "complete imported issue"]);
+
+    let pr = r.json_env(
+        &[
+            "github",
+            "open-pr",
+            "github-issue-7",
+            "--repo",
+            "example/repo",
+            "--base",
+            "main",
+            "--body",
+            "PR body from completed task",
+        ],
+        &variables,
+    );
+    assert_eq!(pr["branch"], "aiw/task/github-issue-7");
+    assert_eq!(pr["pull_request"]["number"], 9);
+    let sent = fs::read_to_string(log).unwrap();
+    assert!(sent.contains("head=aiw/task/github-issue-7"));
+    assert!(sent.contains("body=PR body from completed task"));
 }
 #[test]
 fn incremental_index_detects_same_size_edits_and_deletions() {

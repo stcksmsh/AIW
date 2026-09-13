@@ -1,4 +1,5 @@
 mod adapter;
+mod github;
 mod hook;
 mod index;
 mod model;
@@ -73,6 +74,11 @@ enum Op {
     Worktree {
         #[command(subcommand)]
         action: WorktreeOp,
+    },
+    /// Explicit opt-in GitHub Issue and pull-request adapter.
+    Github {
+        #[command(subcommand)]
+        action: GithubOp,
     },
     /// Execute explicit argv; full output is saved, a compact receipt is printed.
     Run {
@@ -212,6 +218,26 @@ enum WorktreeOp {
         path: PathBuf,
     },
 }
+#[derive(Subcommand)]
+enum GithubOp {
+    /// Import one GitHub Issue labeled agent into a new AIW plan and task.
+    ImportIssue {
+        #[arg(long)]
+        repo: String,
+        #[arg(long)]
+        issue: u64,
+    },
+    /// Open one pull request for a completed task branch.
+    OpenPr {
+        task: String,
+        #[arg(long)]
+        repo: String,
+        #[arg(long)]
+        base: String,
+        #[arg(long)]
+        body: String,
+    },
+}
 fn print(value: &impl serde::Serialize) -> Result<()> {
     println!("{}", serde_json::to_string_pretty(value)?);
     Ok(())
@@ -274,6 +300,7 @@ fn dispatch(cli: Cli) -> Result<()> {
         Op::Plan { .. } => "plan",
         Op::Task { .. } => "task",
         Op::Worktree { .. } => "worktree",
+        Op::Github { .. } => "github",
         Op::Run { .. } => "run",
         Op::Verify { .. } => "verify",
         Op::Checkpoint { .. } => "checkpoint",
@@ -504,6 +531,71 @@ fn dispatch(cli: Cli) -> Result<()> {
                     print(
                         &json!({"task":task,"path":path,"removed":true,"branch_retained":repo::worktree_branch(&task)}),
                     )?;
+                }
+            },
+            Op::Github { action } => match action {
+                GithubOp::ImportIssue { repo, issue } => {
+                    let issue = github::import_issue(&repo, issue)?;
+                    let id = github::imported_task_id(issue.number);
+                    model::valid_id(&id)?;
+                    ensure!(!state.plans.contains_key(&id), "plan {id} already exists");
+                    ensure!(!state.tasks.contains_key(&id), "task {id} already exists");
+                    state.plans.insert(
+                        id.clone(),
+                        Plan {
+                            title: format!("GitHub issue #{}", issue.number),
+                            objective: issue.objective,
+                        },
+                    );
+                    state.tasks.insert(
+                        id.clone(),
+                        Task {
+                            title: issue.title,
+                            plan: id.clone(),
+                            status: Status::Pending,
+                            dependencies: vec![],
+                            scope: vec![],
+                            acceptance: issue.acceptance,
+                            constraints: vec![github::imported_constraint(&repo, issue.number)],
+                            verify: vec![],
+                            worker: None,
+                            blocker: None,
+                            result: None,
+                            evidence: None,
+                        },
+                    );
+                    ws.save(&state)?;
+                    print(&json!({"imported":true,"task":id,"plan":id,"issue":issue.number}))?;
+                }
+                GithubOp::OpenPr {
+                    task,
+                    repo,
+                    base,
+                    body,
+                } => {
+                    model::valid_id(&task)?;
+                    let task_state = state.tasks.get(&task).context("unknown task")?;
+                    ensure!(
+                        task_state.status == Status::Done,
+                        "GitHub PR requires done task {task}"
+                    );
+                    let branch = repo::worktree_branch(&task);
+                    ensure!(
+                        repo::git(
+                            &ws.root,
+                            &[
+                                "show-ref",
+                                "--verify",
+                                "--quiet",
+                                &format!("refs/heads/{branch}")
+                            ]
+                        )
+                        .is_some(),
+                        "local task branch {branch} does not exist; create and push it before opening a PR"
+                    );
+                    let pull_request =
+                        github::open_pr(&repo, &task_state.title, &branch, &base, &body)?;
+                    print(&github::packet(pull_request, &task, &branch))?;
                 }
             },
             Op::Run { timeout, argv } => {

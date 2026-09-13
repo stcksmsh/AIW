@@ -13,6 +13,7 @@ No operation itself invokes an LLM. Human/agent judgment supplies semantic inten
 - [run](run.md)
 - [verify](verify.md)
 - [worktree](worktree.md)
+- [github](github.md)
 - [checkpoint](checkpoint.md)
 - [index](index.md)
 - [probe](probe.md)

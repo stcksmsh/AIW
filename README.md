@@ -175,6 +175,13 @@ Run claim, verification and transition inside it. After committing a done or
 cancelled task's state, `aiw worktree cleanup TASK --path PATH` removes only that
 clean worktree and retains its branch. See [worktree operation](docs/operations/worktree.md).
 
+## Optional GitHub adapter
+
+`aiw github` is an explicit adapter, never core lifecycle work. It requires both
+`GH_TOKEN` and GitHub CLI `gh`, then imports one Issue labeled `agent` or opens
+one PR from a completed task branch. It does not poll, schedule, push, merge, or
+sync repositories. See [GitHub operation](docs/operations/github.md).
+
 ## Scope and documentation
 
 - [Workspace specification and state machine](docs/specification.md)

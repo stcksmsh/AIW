@@ -949,7 +949,7 @@
     "github-issue-pr-adapter": {
       "title": "Import agent issues and open completion PRs",
       "plan": "v1-hardening",
-      "status": "pending",
+      "status": "done",
       "dependencies": [
         "worktree-lifecycle"
       ],
@@ -993,10 +993,71 @@
           "timeout_seconds": 600
         }
       ],
-      "worker": null,
+      "worker": "codex",
       "blocker": null,
-      "result": null,
-      "evidence": null
+      "result": "Added explicit GH_TOKEN-gated gh API adapter. Agent-labeled issue import creates plan/task from title/body acceptance; completed task PR open uses aiw/task branch and supplied body. Mock API focused test and full cargo suite passed.",
+      "evidence": {
+        "source_hash": "3b342593f9161e164041d8be2eb3556d1a4130484b78e2fd133d574a5228a55a",
+        "contract_hash": "53660de779a29578e71b0d9e89be45ec1ce4ea7d372b412fdb956c14963503c3",
+        "success": true,
+        "runs": [
+          {
+            "schema_version": 1,
+            "id": "run-M95XhJ",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked",
+              "github_agent_issue_import_and_pr_open"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 16536,
+            "stdout": ".ai/runtime/runs/run-M95XhJ/stdout.log",
+            "stderr": ".ai/runtime/runs/run-M95XhJ/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "running 0 tests",
+              "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s",
+              "running 1 test",
+              "test github_agent_issue_import_and_pr_open ... ok",
+              "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 44 filtered out; finished in 16.41s",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.05s",
+              "Running unittests src/main.rs (target/debug/deps/aiw-48f647d5a5420b81)",
+              "Running tests/cli.rs (target/debug/deps/cli-07e5c8b06b349bc1)"
+            ],
+            "omitted": 0
+          },
+          {
+            "schema_version": 1,
+            "id": "run-p7JEB1",
+            "argv": [
+              "cargo",
+              "test",
+              "--locked"
+            ],
+            "exit_code": 0,
+            "success": true,
+            "timed_out": false,
+            "duration_ms": 35273,
+            "stdout": ".ai/runtime/runs/run-p7JEB1/stdout.log",
+            "stderr": ".ai/runtime/runs/run-p7JEB1/stderr.log",
+            "diagnostics": [],
+            "tail": [
+              "test v1_compatibility_fixtures_cover_parsing_lifecycle_and_evidence_freshness ... ok",
+              "test checkpoint_freshness_tracks_scoped_source_without_refreshing_evidence ... ok",
+              "test aggregate_verification_and_long_command_display_stay_bounded ... ok",
+              "test unix::timeout_and_source_mutating_verification_fail ... ok",
+              "test result: ok. 45 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 33.45s",
+              "Finished `test` profile [unoptimized + debuginfo] target(s) in 0.06s",
+              "Running unittests src/main.rs (target/debug/deps/aiw-48f647d5a5420b81)",
+              "Running tests/cli.rs (target/debug/deps/cli-07e5c8b06b349bc1)"
+            ],
+            "omitted": 0
+          }
+        ]
+      }
     },
     "harden": {
       "title": "Adversarial review and hardening",
@@ -2402,9 +2463,9 @@
   "active_plan": "v1-hardening",
   "active_task": null,
   "checkpoint": {
-    "task": "worktree-lifecycle",
-    "next_action": "Claim github-issue-pr-adapter, inspect existing release GitHub patterns, then design explicit token-gated mockable adapter commands",
-    "note": "Managed worktrees use deterministic aiw/task/TASK branches; cleanup requires terminal task state in child worktree plus clean committed state and retains branch.",
-    "source_hash": "bb7f21918482153ac75eaec27f47d5eb68430736c59d2ca159e9f9bc55377ab8"
+    "task": "github-issue-pr-adapter",
+    "next_action": "Review three completed hardening tasks, inspect release diff, and decide whether to publish a follow-up release",
+    "note": "GitHub adapter is explicit GH_TOKEN plus gh api only. Mock API regression proves agent-labeled issue import and completed task PR branch/body; core commands remain offline.",
+    "source_hash": "795af64260c8631e1d3a306331085fb6d6210f5a9c2bd08518d4aa10c43c692b"
   }
 }
